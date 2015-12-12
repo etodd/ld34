@@ -1,10 +1,22 @@
 var express = require('express');
 var app = express();
+var expressWs = require('express-ws')(app);
+var gameLib = require('./game/game.js');
+
+var game = new gameLib.Game();
 
 app.use(express.static('webcontent'));
 
-app.get('/', function(req, res){
-	res.send('Hello World!');
+app.ws("/event", function(ws, req){
+	game.handleClientConnect(ws);
+	
+	ws.on('message', function(msg){
+		game.handleClientEvent(ws, JSON.parse(msg));
+	});
+
+	ws.on('close', function(msg){
+		game.handleClientClose(ws);
+	});
 });
 
 var server = app.listen(3000, function (){
