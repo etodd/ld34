@@ -50,8 +50,13 @@ var Grid = function(cells, size){
 	this.cells = cells;
 
 	this.debug = function(){
-		for (var i = 0; i < this.cells.length; ++i){
-			this.cells[i].debug();
+		for (var x = 0; x < this.size.x; ++x){
+			var line = "";
+			for (var y = 0; y < this.size.y; ++y){
+				var i = numaric.vecToIndex(new Vec2(x,y), this.size);
+				line += "[" + this.cells[i].value + " " + this.cells[i].playerId + "]";
+			}
+			console.log(line);
 		}
 	}
 }
