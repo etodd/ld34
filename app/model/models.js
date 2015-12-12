@@ -47,8 +47,12 @@ var Player = function(){
 	}
 }
 
+var Grid = function(entities){
+	this.entities = entities;
+}
+
 var Level = function(){
-	this.entities = [];
+	this.grid = null;
 
 	this.new = function(bitmap){
 		//TODO
