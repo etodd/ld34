@@ -1,36 +1,122 @@
 var constants = {
-	max_viewsize: 50.0,
+	max_camera_size: 25.0,
+	camera_offset: new THREE.Vector3(),
+	color_table: [
+		0x555555,
+		0xff0000,
+		0xff4400,
+		0xff6600,
+		0xff8800,
+		0xffaa00,
+		0xffbb00,
+		0xaa9900,
+		0x99aa00,
+		0x77aa00,
+		0x55aa00,
+		0x33aa00,
+		0x11aa00,
+		0x00bb00,
+		0x009900,
+		0x008800,
+		0x008822,
+		0x008844,
+		0x00aa66,
+		0x00aa88,
+		0x00aaaa,
+		0x00aacc,
+		0x00aadd,
+		0x0088dd,
+		0x0066dd,
+		0x0044dd,
+		0x0022dd,
+		0x0000dd,
+		0x0044ff,
+		0x0022ff,
+		0x0000ff,
+		0x2200ff,
+		0x4400ff,
+		0x6600ff,
+		0x8800ff,
+		0xaa00ff,
+		0xcc00ff,
+		0xee00ff,
+		0xff00ee,
+		0xff00cc,
+		0xff00aa,
+		0xff0088,
+		0xff0066,
+		0xff0044,
+		0xff0022,
+	],
+	level: {
+		ids: [
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+		],
+
+		numbers: [
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 9, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 9, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 9, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 9, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+		],
+	},
+};
+
+var state = {
+	numbers: [],
+	ids: [],
 };
 
 var graphics = {
+	clock: new THREE.Clock(),
 	texture_loader: new THREE.TextureLoader(),
-	viewsize: 1.0,
 	scene: null,
 	camera: null,
 	renderer: null,
 	material: null,
-	grid: null,
 	mesh: null,
-	world: {
-		ground: null,
-	},
+	ground: null,
+	camera_size: 1.0,
+	camera_size_target: 0,
+	camera_pos: new THREE.Vector2(),
+	camera_pos_target: new THREE.Vector2(),
 };
 
 var funcs = {};
 
-funcs.init = function() {
+funcs.color_hash = function(id) {
+	return constants.color_table[id % constants.color_table.length];
+};
 
-	var exampleSocket = new WebSocket("ws://localhost:3000/event", "protocolOne");
-	exampleSocket.onopen = function (event) {
-		var data = {
-			message: "Hello socket",
-			type: "moveEvent"
-		};
-  		exampleSocket.send(JSON.stringify(data));
-	};
-	exampleSocket.onmessage = function (event) {
-  		console.log(event.data);
-	}
+funcs.init = function() {
+	graphics.clock.start();
 
 	window.addEventListener('resize', funcs.on_resize, false);
 
@@ -44,8 +130,9 @@ funcs.init = function() {
 		-1,
 		0.01, 1000
 	);
-	graphics.camera.rotation.x = Math.PI * -0.3;
+	graphics.camera.rotation.x = Math.PI * 0.2;
 	graphics.camera.rotation.y = Math.PI * 0.1;
+	constants.camera_offset = graphics.camera.getWorldDirection().multiplyScalar(-constants.max_camera_size)
 
 	{
 		var hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
@@ -58,7 +145,7 @@ funcs.init = function() {
 	{
 		var dirLight = new THREE.DirectionalLight(0xffffff, 1);
 		dirLight.color.setHSL(0.1, 1, 0.95);
-		dirLight.position.set(0, 1.75, -1);
+		dirLight.position.set(1, 0.5, 1.75);
 		dirLight.position.multiplyScalar(50);
 		graphics.scene.add(dirLight);
 
@@ -67,24 +154,21 @@ funcs.init = function() {
 		dirLight.shadowMapWidth = 2048;
 		dirLight.shadowMapHeight = 2048;
 
-		var d = constants.max_viewsize * 1.5 * 0.5;
+		var d = constants.max_camera_size * 1.5 * 0.5;
 
 		dirLight.shadowCameraLeft = -d;
 		dirLight.shadowCameraRight = d;
 		dirLight.shadowCameraTop = d;
 		dirLight.shadowCameraBottom = -d;
 
-		dirLight.shadowCameraFar = 3500;
-		dirLight.shadowBias = -0.0001;
+		dirLight.shadowCameraFar = constants.max_camera_size * 5.0;
+		dirLight.shadowBias = -0.001;
 	}
 
 	graphics.mesh = funcs.add_mesh(new THREE.BoxGeometry(1, 1, 1), 0xff0000);
-	graphics.mesh.position.set(0.5, 0.5, 0.5);
+	graphics.mesh.position.z = 0.5;
 
-	{
-		graphics.world.ground = funcs.add_mesh(new THREE.PlaneBufferGeometry(64, 64), 0xffddcc);
-		graphics.world.ground.rotation.x = -0.5 * Math.PI;
-	}
+	graphics.ground = funcs.add_mesh(new THREE.PlaneBufferGeometry(1, 1), 0xffddcc);
 
 	graphics.renderer = new THREE.WebGLRenderer({ antialias: true });
 	graphics.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -95,14 +179,15 @@ funcs.init = function() {
 	graphics.renderer.shadowMap.enabled = true;
 	graphics.renderer.shadowMap.cullFace = THREE.CullFaceBack;
 	graphics.renderer.shadowMap.type = THREE.PCFShadowMap;
-	graphics.renderer.autoClear = false;
+	graphics.renderer.setClearColor(0xddeeff);
 	graphics.renderer.setPixelRatio(window.devicePixelRatio);
 
 	document.body.appendChild(graphics.renderer.domElement);
 
-	funcs.load_level('test');
-	funcs.move_camera(new THREE.Vector2(0, 0), 50.0);
+	funcs.load_level(0, constants.level);
 	funcs.on_resize();
+
+	$(window).on('resize', funcs.on_resize);
 
 	$(document).on('keydown', funcs.on_keydown);
 
@@ -116,11 +201,11 @@ funcs.on_keydown = function(event) {
 	switch (event.keyCode) {
 		case 87: //W
 		case 38: //up
-			graphics.mesh.position.z -= 1;
+			graphics.mesh.position.y += 1;
 			break;
 		case 83: //S
 		case 40: //down
-			graphics.mesh.position.z += 1;
+			graphics.mesh.position.y -= 1;
 			break;
 		case 65: //A
 		case 37: //left
@@ -134,12 +219,23 @@ funcs.on_keydown = function(event) {
 };
 
 funcs.error = function() {
+	// TODO: error handling
 };
 
-funcs.load_level = function(name) {
+funcs.width = function() {
+	return state.numbers[0].length;
+};
+
+funcs.height = function() {
+	return state.numbers.length;
+};
+
+funcs.load_level = function(id, level) {
+	state = level;
+
 	var texture = graphics.texture_loader.load
 	(
-		name + '.png',
+		'test.png',
 		function(texture) {
 			texture.minFilter = texture.magFilter = THREE.NearestFilter;
 			texture.needsUpdate = true;
@@ -147,7 +243,27 @@ funcs.load_level = function(name) {
 		funcs.error
 	);
 
-	graphics.world.ground.material.map = texture;
+	graphics.ground.material.map = texture;
+	graphics.ground.scale.set(funcs.width(), funcs.height(), 1);
+	graphics.ground.position.set(funcs.width() * 0.5 - 0.5, funcs.height() * 0.5 - 0.5, 0);
+
+	for (var x = 0; x < funcs.width(); x++)
+	{
+		for (var y = 0; y < funcs.height(); y++)
+		{
+			var number = state.numbers[x][y];
+			if (number > 0)
+			{
+				var cell_height = number * 0.1;
+				var mesh = funcs.add_mesh(new THREE.BoxGeometry(1, 1, cell_height), funcs.color_hash(state.ids[x][y]));
+				mesh.position.set(x, y, cell_height * 0.5);
+			}
+		}
+	}
+
+	funcs.update_camera_target();
+	graphics.camera_pos.copy(graphics.camera_pos_target);
+	graphics.camera_size = graphics.camera_size_target;
 };
 
 funcs.add_mesh = function(geometry, color) {
@@ -160,10 +276,20 @@ funcs.add_mesh = function(geometry, color) {
 };
 
 funcs.animate = function() {
+	var dt = graphics.clock.getDelta();
 
 	requestAnimationFrame(funcs.animate);
 
 	graphics.renderer.render(graphics.scene, graphics.camera);
+
+	graphics.camera_pos.lerp(graphics.camera_pos_target, dt * 10.0);
+
+	graphics.camera_size = graphics.camera_size < graphics.camera_size_target
+		? Math.min(graphics.camera_size_target, graphics.camera_size + dt)
+		: Math.max(graphics.camera_size_target, graphics.camera_size - dt);
+
+	graphics.camera.position.set(graphics.camera_pos.x, graphics.camera_pos.y, 0).add(constants.camera_offset);
+	funcs.update_projection();
 }
 
 funcs.on_resize = function() {
@@ -173,7 +299,7 @@ funcs.on_resize = function() {
 
 funcs.update_projection = function() {
 	var min_size = window.innerWidth < window.innerHeight ? window.innerWidth : window.innerHeight;
-	var zoom = graphics.viewsize / min_size;
+	var zoom = graphics.camera_size / min_size;
 	graphics.camera.left = -0.5 * window.innerWidth * zoom;
 	graphics.camera.right = 0.5 * window.innerWidth * zoom;
 	graphics.camera.top = 0.5 * window.innerHeight * zoom;
@@ -181,10 +307,31 @@ funcs.update_projection = function() {
 	graphics.camera.updateProjectionMatrix();
 };
 
-funcs.move_camera = function(pos, viewsize) {
-	graphics.viewsize = viewsize < constants.max_viewsize ? viewsize : constants.max_viewsize;
-	graphics.camera.position.set(pos.x, 0, pos.y).add(graphics.camera.getWorldDirection().multiplyScalar(-graphics.viewsize));
-	funcs.update_projection();
+funcs.update_camera_target = function() {
+	var min = new THREE.Vector2(funcs.width(), funcs.height());
+	var max = new THREE.Vector2(0, 0);
+	var average = new THREE.Vector2();
+	var count = 0;
+	for (var x = 0; x < funcs.width(); x++)
+	{
+		for (var y = 0; y < funcs.height(); y++)
+		{
+			if (state.ids[x][y] === 1 && state.numbers[x][y] > 0)
+			{
+				min.x = Math.min(min.x, x);
+				min.y = Math.min(min.y, y);
+				max.x = Math.max(max.x, x);
+				max.y = Math.max(max.y, y);
+				average.x += x;
+				average.y += y;
+				count++;
+			}
+		}
+	}
+	average.multiplyScalar(1.0 / count);
+	graphics.camera_pos_target.copy(average);
+	var size = Math.max(max.x - min.x, max.y - min.y);
+	graphics.camera_size_target = Math.min(size + 3, constants.max_camera_size);
 };
 
 $(document).ready(funcs.init);
