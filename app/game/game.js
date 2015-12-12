@@ -1,4 +1,5 @@
 var webmodels = require("../model/webmodels.js");
+var process = require("./process.js");
 
 var Game = function(){
 	this.clients = [];
@@ -14,29 +15,39 @@ var Game = function(){
 		console.log("closed Client amnt: " + this.clients.length);
 	}
 
-	this.handleClientEvent = function(ws, data){
+	this.handleClientEvent = function(ws, event){
 		var client = this.clients[this.getClientIndexWithWS(ws)];
-		console.log("client Event: " + data);
+		if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
+			console.log("client move event");
+		}
+		this.sendStateUpdate(new webmodels.StateUpdate("hi"));
+	}
+
+	this.update = function(){
+
 	}
 
 
 
 	this.removeClientWithWS = function(ws){
-		var clientIndex = this.getClientIndexWithWS(ws);
-		if (clientIndex != -1){
-			this.clients.splice(clientIndex,1);
-		} else {
-			console.log("ERROR: client did not exit in this game");
-		}
+		this.clients.splice(this.getClientIndexWithWS(ws),1);
 	}
 
 	this.getClientIndexWithWS = function(ws){
 		for (var i = 0; i < this.clients.length; ++i){
-			if (ws == this.clients[i].ws){
+			if (ws == this.clients[i].ws){ 
 				return i;
 			}
 		}
+		console.error("Error: client index not found");
 		return -1;
+	}
+
+	this.sendStateUpdate = function(stateUpdate){
+		var stateUpdateStr = JSON.stringify(stateUpdate);
+		for (var i = 0; i < this.clients.length; ++i){
+			this.clients[i].ws.send(stateUpdateStr);
+		}
 	}
 }
 exports.Game = Game;
