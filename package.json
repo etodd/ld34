@@ -10,6 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.13.3",
+    "express-ws": "^0.2.6",
+    "node-png": "^0.4.3",
+    "png-js": "^0.1.1",
     "sqlite3": "^3.1.1",
     "uuid": "^2.0.1"
   }

@@ -13,12 +13,12 @@ exports.Vec2 = Vec2;
 var Entity = function(){
 	this.id = null;
 	this.position = null;
-	this.type = null;
+	this.value = null;
 
-	this.new = function(position, type){
+	this.new = function(position, value){
 		this.id = uuid.v1();
 		this.position = position;
-		this.type = type;
+		this.value = value;
 		return this;
 	}
 
@@ -29,6 +29,36 @@ var Entity = function(){
 	}
 }
 exports.Entity = Entity;
+
+var Player = function(){
+	this.entity = null;
+	this.userName = null;
+
+	this.new = function(userName, entity){
+		this.userName = userName;
+		this.entity = entity;
+		return this;
+	}
+
+	this.debug = function(){
+		console.log("Player");
+		console.log(this.userName);
+		this.entity.debug();
+	}
+}
+
+var Grid = function(entities){
+	this.entities = entities;
+}
+
+var Level = function(){
+	this.grid = null;
+
+	this.new = function(bitmap){
+		//TODO
+		return this;
+	}
+}
 
 /*
 	Test
