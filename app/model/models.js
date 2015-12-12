@@ -10,33 +10,25 @@ var Vec2 = function(x, y){
 }
 exports.Vec2 = Vec2;
 
-var Entity = function(){
-	this.id = null;
-	this.position = null;
-	this.value = null;
-
-	this.new = function(position, value){
-		this.id = uuid.v1();
-		this.position = position;
-		this.value = value;
-		return this;
-	}
+const NULL_PLAYER_ID = 0;
+var Cell = function(id, playerId){
+	this.id = id;
+	this.playerId = playerId;
 
 	this.debug = function(){
-		console.log("Entity");
-		console.log(this.id);
-		this.position.debug();
+		console.log("ID: "+this.id+" playerId: "+this.playerId);
 	}
 }
-exports.Entity = Entity;
+exports.Cell = Cell;
+exports.Cell.NULL_PLAYER_ID = NULL_PLAYER_ID;
 
 var Player = function(){
-	this.entity = null;
-	this.userName = null;
+	this.id = null;
+	this.currentLevelIndex = 0;
 
-	this.new = function(userName, entity){
-		this.userName = userName;
-		this.entity = entity;
+	this.new = function(id, levelIndex){
+		this.id = id;
+		this.levelIndex = levelIndex;
 		return this;
 	}
 
@@ -46,19 +38,35 @@ var Player = function(){
 		this.entity.debug();
 	}
 }
+exports.Player = Player;
 
-var Grid = function(entities){
-	this.entities = entities;
-}
+var Grid = function(cells, size){
+	this.size = size;
+	this.cells = cells;
 
-var Level = function(){
-	this.grid = null;
-
-	this.new = function(bitmap){
-		//TODO
-		return this;
+	this.debug = function(){
+		for (var i = 0; i < this.cells.length; ++i){
+			this.cells[i].debug();
+		}
 	}
 }
+exports.Grid = Grid;
+
+var Level = function(){
+	this.id = null;
+	this.grid = null;
+
+	this.new = function(initalGrid){
+		this.id = uuid.v1();
+		this.grid = initalGrid;
+		return this;
+	}
+
+	this.debug = function(){
+		this.grid.debug();
+	}
+}
+exports.Level = Level;
 
 /*
 	Test

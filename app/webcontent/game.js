@@ -20,6 +20,18 @@ var funcs = {};
 
 funcs.init = function() {
 
+	var exampleSocket = new WebSocket("ws://localhost:3000/event", "protocolOne");
+	exampleSocket.onopen = function (event) {
+		var data = {
+			message: "Hello socket",
+			type: "moveEvent"
+		};
+  		exampleSocket.send(JSON.stringify(data));
+	};
+	exampleSocket.onmessage = function (event) {
+  		console.log(event.data);
+	}
+
 	window.addEventListener('resize', funcs.on_resize, false);
 
 	graphics.scene = new THREE.Scene();

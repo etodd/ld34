@@ -1,12 +1,26 @@
+var models = require("../model/models.js");
 var webmodels = require("../model/webmodels.js");
 var process = require("./process.js");
 
 var Game = function(){
 	this.clients = [];
+	this.levels = [];
+
+	this.init = function(){
+		this.levels = process.loadLevels();
+	}
 
 	this.handleClientConnect = function(ws){
-		var client = new webmodels.Client(ws);
+		var newPlayer = new models.Player().new(12, 0);
+		var client = new webmodels.Client(ws, newPlayer);
 		this.clients.push(client);
+
+		//give client init state with a level
+		var currentLevel = this.levels[client.player.currentLevelIndex];
+		currentLevel.debug();
+		var initState = new webmodels.State(currentLevel, client.player);
+		client.ws.send(JSON.stringify(initState));
+
 		console.log("opened Client amnt: " + this.clients.length);
 	}
 
@@ -20,13 +34,12 @@ var Game = function(){
 		if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
 			console.log("client move event");
 		}
-		this.sendStateUpdate(new webmodels.StateUpdate("hi"));
+		//this.sendStateUpdate(new webmodels.StateUpdate("hi"));
 	}
 
 	this.update = function(){
 
 	}
-
 
 
 	this.removeClientWithWS = function(ws){
@@ -49,5 +62,7 @@ var Game = function(){
 			this.clients[i].ws.send(stateUpdateStr);
 		}
 	}
+
+	this.init();
 }
 exports.Game = Game;
