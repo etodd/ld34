@@ -14,17 +14,25 @@ const TYPE_MOVE_EVENT = "moveEvent";
 const TYPE_INIT_STATE = "initState";
 const TYPE_STATE_UPDATE = "stateUpdate";
 
-var ClientEvent = function(type){
+var ClientEvent = function(type, dir){
 	this.type = type;
+	this.dir = dir;
 }
 exports.ClientEvent = ClientEvent;
 exports.ClientEvent.TYPE_MOVE_EVENT = TYPE_MOVE_EVENT;
 
 
+var Event = function(cellId, dir, playerId, value){
+	this.cellId = cellId;
+	this.dir = dir;
+	this.playerId = playerId;
+	this.value = value;
+}
+exports.Event = Event;
 
-var StateUpdate = function(pos){
+var StateUpdate = function(events){
 	this.type = TYPE_STATE_UPDATE;
-	this.pos = pos;
+	this.events = events;
 }
 exports.StateUpdate = StateUpdate;
 exports.StateUpdate.TYPE_STATE_UPDATE = TYPE_STATE_UPDATE;

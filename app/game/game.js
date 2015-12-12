@@ -32,15 +32,21 @@ var Game = function(){
 	this.handleClientEvent = function(ws, event){
 		var client = this.clients[this.getClientIndexWithWS(ws)];
 		if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
+			var client = this.getClientIndexWithWS(ws);
+			var level = this.levels[client.player.currentLevelIndex];
+
+			process.updateGrid(level, client.player, event.dir);
+
 			console.log("client move event");
 		}
 		//this.sendStateUpdate(new webmodels.StateUpdate("hi"));
 	}
 
 	this.update = function(){
-
+		for (var levelIndex = 0; levelIndex < this.levels.length; ++levelIndex){
+			var level = this.levels[levelIndex];
+		}
 	}
-
 
 	this.removeClientWithWS = function(ws){
 		this.clients.splice(this.getClientIndexWithWS(ws),1);

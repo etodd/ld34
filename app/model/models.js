@@ -1,4 +1,5 @@
 var uuid = require('uuid');
+var numaric = require('../utils/numaric.js');
 
 var Vec2 = function(x, y){
 	this.x = x;
@@ -7,16 +8,20 @@ var Vec2 = function(x, y){
 	this.debug = function(){
 		console.log("("+this.x+", "+this.y+")");
 	}
+
+	this.add = function(vec){
+		return new Vec2(this.x+vec.x, this.y+vec.y);
+	}
 }
 exports.Vec2 = Vec2;
 
 const NULL_PLAYER_ID = 0;
-var Cell = function(id, playerId){
-	this.id = id;
+var Cell = function(value, playerId){
+	this.value = value;
 	this.playerId = playerId;
 
 	this.debug = function(){
-		console.log("ID: "+this.id+" playerId: "+this.playerId);
+		console.log("ID: "+this.value+" playerId: "+this.playerId);
 	}
 }
 exports.Cell = Cell;
