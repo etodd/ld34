@@ -6,7 +6,7 @@ var vecToIndex = function(vec, size){
 exports.vecToIndex = vecToIndex
 
 var indexToVec = function(index, size){
-	var y = index / size.x;
+	var y = Math.floor(index / size.x);
 	var x = index - (y * size.x);
 	return new models.Vec2(x,y);
 }

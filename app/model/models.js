@@ -12,6 +12,36 @@ var Vec2 = function(x, y){
 	this.add = function(vec){
 		return new Vec2(this.x+vec.x, this.y+vec.y);
 	}
+
+	this.get = function(dir, size){
+		switch (dir){
+			case 0:
+				return (size.y - 1) - this.y;
+			case 1:
+				return (size.x - 1) - this.x;
+			case 2:
+				return this.y;
+			case 3:
+				return this.x;
+		}
+	};
+
+	this.set = function(dir, size, value){
+		switch (dir){
+			case 0:
+				this.y = (size.y - 1) - value;
+				break;
+			case 1:
+				this.x = (size.x - 1) - value;
+				break;
+			case 2:
+				this.y = value;
+				break;
+			case 3:
+				this.x = value;
+				break;
+		}
+	};
 }
 exports.Vec2 = Vec2;
 
@@ -50,9 +80,9 @@ var Grid = function(cells, size){
 	this.cells = cells;
 
 	this.debug = function(){
-		for (var x = 0; x < this.size.x; ++x){
+		for (var y = this.size.y - 1; y >= 0; --y){
 			var line = "";
-			for (var y = 0; y < this.size.y; ++y){
+			for (var x = 0; x < this.size.x; ++x){
 				var i = numaric.vecToIndex(new Vec2(x,y), this.size);
 				line += "[" + this.cells[i].value + " " + this.cells[i].playerId + "]";
 			}

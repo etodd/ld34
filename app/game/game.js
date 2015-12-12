@@ -83,15 +83,21 @@ var client = new webmodels.Client(null, newPlayer);
 game.clients.push(client);
 
 //player
-game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(5,5), new models.Vec2(8,8))] = new models.Cell(2,12);
-game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(5,4), new models.Vec2(8,8))] = new models.Cell(1,12);
+game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(5,5), game.levels[0].grid.size)] = new models.Cell(2,12);
+game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(5,4), game.levels[0].grid.size)] = new models.Cell(1,12);
 
-game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(3,2), new models.Vec2(8,8))] = new models.Cell(2,0);
-game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(4,2), new models.Vec2(8,8))] = new models.Cell(2,0);
+game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(4,5), game.levels[0].grid.size)] = new models.Cell(2,0);
+game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(4,4), game.levels[0].grid.size)] = new models.Cell(2,0);
 
 game.levels[0].grid.debug();
 //process.updateGrid(game.levels[0], newPlayer, 1);
 //process.updateGrid(game.levels[0], newPlayer, 0);
-process.updateGrid(game.levels[0], newPlayer, 3);
+process.updateGrid(game.levels[0], newPlayer, 1);
+console.log("---------------------------------------");
+game.levels[0].grid.debug();
+process.updateGrid(game.levels[0], newPlayer, 0);
+console.log("---------------------------------------");
+game.levels[0].grid.debug();
+process.updateGrid(game.levels[0], newPlayer, 0);
 console.log("---------------------------------------");
 game.levels[0].grid.debug();

@@ -34,40 +34,55 @@ exports.loadLevels = loadLevels;
 */
 
 var updateGrid = function(level, player, dir){
-	var newGrid = generateGrid(level.grid.size);
-	var blocked = true;
-	for (var i = 0; i < level.grid.cells.length; ++i){
-		blocked = updateCell(i, player, level.grid, newGrid, dir, blocked);
+	var u_dir = getReverse(dir);
+	var v_dir = getPerpendicular(u_dir);
+	for (var u = 0; u < Math.abs(level.grid.size.get(getPositiveDir(u_dir), level.grid.size)); ++u){
+		for (var v = 0; v < Math.abs(level.grid.size.get(getPositiveDir(v_dir), level.grid.size)); ++v){
+			var p = new models.Vec2();
+			p.set(u_dir, level.grid.size, u);
+			p.set(v_dir, level.grid.size, v);
+			updateCell(p, player, level.grid, dir);
+		}
 	}
-	level.grid = newGrid;
 }
 exports.updateGrid = updateGrid;
 
-var updateCell = function(cellId, player, grid, newGrid, dir, blocked){
-	var blocked = false;
-
-	if (grid.cells[cellId].playerId == player.id){
-		var nextCellId = getNextCellId(cellId, grid, dir);
-		if (nextCellId < grid.size.x * grid.size.y && nextCellId >= 0 && blocked){
-
-			if (grid.cells[nextCellId].value == 0 || grid.cells[nextCellId].playerId == player.id){ //can move because next cell is empty
-				moveCell(cellId, nextCellId, grid, newGrid);
-				
-			} else if (grid.cells[nextCellId].value == grid.cells[cellId].value){
-				
-			}
-
-		} else {
-			newGrid.cells[cellId].playerId = grid.cells[cellId].playerId;
-			newGrid.cells[cellId].value = grid.cells[cellId].value;
-			blocked = true;
+var updateCell = function(cellPos, player, grid, dir){
+	var cellId = numaric.vecToIndex(cellPos, grid.size);
+	if (grid.cells[cellId].playerId === player.id){
+		var nextCellPos = cellPos.add(getDirectionEnum(dir));
+		if (nextCellPos.x < 0 || nextCellPos.x >= grid.size.x || nextCellPos.y < 0 || nextCellPos.y >= grid.size.y) {
+			console.log('stuck');
+			// out of bounds. do nothing
 		}
-
-	} else if (grid.cells[cellId].value != 0) {
-		newGrid.cells[cellId].playerId = grid.cells[cellId].playerId;
-		newGrid.cells[cellId].value = grid.cells[cellId].value;
+		else{
+			var nextCellId = numaric.vecToIndex(nextCellPos, grid.size);
+			var cellValue = grid.cells[cellId].value;
+			var nextCellValue = grid.cells[nextCellId].value;
+			if (nextCellValue > 0) {
+				// something is in the way
+				if (nextCellValue == cellValue) {
+					console.log('merge');
+					// merge into
+					grid.cells[nextCellId].value = cellValue + 1;
+					grid.cells[nextCellId].playerId = player.id;
+					grid.cells[cellId].value = 0;
+					grid.cells[cellId].playerId = 0;
+				}
+				else {
+					console.log('stuck2');
+					// can't merge. do nothing
+				}
+			}
+			else {
+				// nothing in the way. move there
+				grid.cells[nextCellId].value = cellValue;
+				grid.cells[nextCellId].playerId = player.id;
+				grid.cells[cellId].value = 0;
+				grid.cells[cellId].playerId = 0;
+			}
+		}
 	}
-	return blocked;
 }
 
 var moveCell = function(cellId, nextCellId, grid, newGrid){
@@ -99,4 +114,40 @@ directions.push(new models.Vec2(0,1));
 directions.push(new models.Vec2(1,0));
 var getDirectionEnum = function(dir){
 	return directions[dir];
+}
+var getPerpendicular = function(dir){
+	switch (dir){
+		case 0:
+			return 1;
+		case 1:
+			return 0;
+		case 2:
+			return 3;
+		case 3:
+			return 2;
+	}
+}
+var getReverse = function(dir){
+	switch (dir){
+		case 0:
+			return 2;
+		case 1:
+			return 3;
+		case 2:
+			return 0;
+		case 3:
+			return 1;
+	}
+}
+var getPositiveDir = function(dir){
+	switch (dir){
+		case 0:
+			return 2;
+		case 1:
+			return 3;
+		case 2:
+			return 2;
+		case 3:
+			return 3;
+	}
 }
