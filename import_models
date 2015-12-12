@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for f in app/webcontent/3DModels/*.obj
+do
+	python convert_obj_three.py -i $f -o ${f%.*}.js
+done
