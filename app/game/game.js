@@ -18,7 +18,10 @@ var Game = function(){
 		var newPlayer = new models.Player().new(this.clientIdCounter);
 		this.clientIdCounter++;
 		var client = new webmodels.Client(ws, newPlayer);
-		var initState = this.clientEnterLevel(client, 0);
+
+		var levelIndex = this.findLeastPopulatedLevel_withDifficulty(0);
+
+		var initState = this.clientEnterLevel(client, levelIndex);
 		this.clients.push(client);
 		client.ws.send(JSON.stringify(initState));
 	}
@@ -198,21 +201,24 @@ var Game = function(){
 		var levelClientCount = [];
 		for (var i = 0; i < this.levels.length; ++i){ levelClientCount.push(0); }
 		for (var i = 0; i < this.clients.length; ++i){
-			levelClientCount[this.clients[i].currentLevelIndex] += 1;
+			levelClientCount[this.clients[i].player.currentLevelIndex] += 1;
 		}
 
 		var leastPopIndex = -1;
 		var leastPopAmnt = -1;
 		for (var i = 0; i < this.levels.length; ++i){
+
 			if (this.levels[i].difficulty == difficulty){
+
 				var levelClientAmnt = levelClientCount[i];
-				if (levelClientCount < leastPopAmnt){
-					leastPopAmnt = levelClientCount;
+				console.log(levelClientAmnt);
+				if (levelClientAmnt < leastPopAmnt || i == 0){
+
+					leastPopAmnt = levelClientAmnt;
 					leastPopIndex = i;
 				}
 			}
 		}
-		console.log('LeastPop amnt: ' + leastPopAmnt);
 		return leastPopIndex;
 	}
 }

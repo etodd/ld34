@@ -20,6 +20,8 @@ var loadLevels = function(output, callback){
 		{filename: 'webcontent/level0.png', difficulty: 0},
 		{filename: 'webcontent/level1.png', difficulty: 1},
 		{filename: 'webcontent/level2.png', difficulty: 2},
+		{filename: 'webcontent/level0.png', difficulty: 0},
+		{filename: 'webcontent/level0.png', difficulty: 0},
 	];
 
 	var index = 0;
