@@ -18,7 +18,7 @@ var Game = function(){
 		var newPlayer = new models.Player().new(this.clientIdCounter);
 		this.clientIdCounter++;
 		var client = new webmodels.Client(ws, newPlayer);
-		var initState = this.clientEnterLevel(client, 2);
+		var initState = this.clientEnterLevel(client, 0);
 		this.clients.push(client);
 		client.ws.send(JSON.stringify(initState));
 	}

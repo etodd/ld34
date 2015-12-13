@@ -16,22 +16,22 @@ var generateGrid = function(size){
 }
 
 var loadLevels = function(output, callback){
-	var filenames = [
-		'webcontent/TestLevelV10.png',
-		'webcontent/TestLevelV11.png',
-		'webcontent/TestLevelV12.png',
+	var levelData = [
+		{filename: 'webcontent/TestLevelV10.png', difficulty: 0},
+		{filename: 'webcontent/TestLevelV11.png', difficulty: 1},
+		{filename: 'webcontent/TestLevelV12.png', difficulty: 2},
 	];
 
 	var index = 0;
 
 	var levelDone;
 	levelDone = function() {
-		if (index < filenames.length) {
-			loadLevelFromDisk(filenames[index], output, levelDone);
+		if (index < levelData.length) {
+			loadLevelFromDisk(levelData[index], output, levelDone);
 			index++;
 		}
 		else {
-			console.log('Loaded ' + filenames.length + ' levels.');
+			console.log('Loaded ' + levelData.length + ' levels.');
 			callback(); // all done
 		}
 	};
@@ -39,18 +39,17 @@ var loadLevels = function(output, callback){
 }
 exports.loadLevels = loadLevels;
 
-var loadLevelFromDisk = function(filename, output, callback){
-	imgLoader.loadImage(filename, function(img) {
+var loadLevelFromDisk = function(levelData, output, callback){
+	imgLoader.loadImage(levelData.filename, function(img){
 		var grid = new models.Grid(new Array(img.width * img.height), new models.Vec2(img.width, img.height));
 
-		for (var i = 0; i < img.data.length; i++) {
-			var p = numaric.indexToVec(i, grid.size)
+		for (var i = 0; i < img.data.length; i++){
+			var p = numaric.indexToVec(i, grid.size);
 			p.y = (grid.size.y - 1) - p.y;
 			var new_index = numaric.vecToIndex(p, grid.size);
 			grid.cells[new_index] = new models.Cell(img.data[i].getType(), 0);
 		}
-
-		output.push(new models.Level().new(grid));
+		output.push(new models.Level().new(grid, levelData.difficulty));
 		callback();
 	});
 }

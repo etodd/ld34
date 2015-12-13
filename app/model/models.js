@@ -103,11 +103,11 @@ Grid.prototype.debug = function(){
 exports.Grid = Grid;
 
 var Level = function(){
-	this.id = null;
+	this.difficulty = 0; //numaric aka 0(lvl1), 1(lvl2), 2(lcl3)
 	this.grid = null;
 }
-Level.prototype.new = function(initalGrid){
-	this.id = uuid.v1();
+Level.prototype.new = function(initalGrid, difficulty){
+	this.difficulty = difficulty;
 	this.grid = initalGrid;
 	return this;
 }
