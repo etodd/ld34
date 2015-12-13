@@ -18,7 +18,10 @@ var Game = function(){
 
 		//give client init state with a level
 		var currentLevel = this.levels[client.player.currentLevelIndex];
-		currentLevel.debug();
+
+		currentLevel.grid.cells[numaric.vecToIndex(new models.Vec2(5, 5), currentLevel.grid.size)] = new models.Cell(2, newPlayer.id);
+		currentLevel.grid.cells[numaric.vecToIndex(new models.Vec2(5, 4), currentLevel.grid.size)] = new models.Cell(1, newPlayer.id);
+
 		var initState = new webmodels.State(currentLevel, client.player);
 		client.ws.send(JSON.stringify(initState));
 
@@ -33,7 +36,6 @@ var Game = function(){
 	this.handleClientEvent = function(ws, event){
 		var client = this.clients[this.getClientIndexWithWS(ws)];
 		if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
-			var client = this.getClientIndexWithWS(ws);
 			var level = this.levels[client.player.currentLevelIndex];
 
 			var stateUpdate = new webmodels.StateUpdate([]);
@@ -42,7 +44,6 @@ var Game = function(){
 
 			console.log("client move event");
 		}
-		//this.sendStateUpdate(new webmodels.StateUpdate("hi"));
 	}
 
 	this.update = function(){
@@ -76,34 +77,4 @@ var Game = function(){
 }
 exports.Game = Game;
 
-
-
-
 var game = new Game();
-var newPlayer = new models.Player().new(12, 0);
-var client = new webmodels.Client(null, newPlayer);
-game.clients.push(client);
-
-//player
-game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(5,5), game.levels[0].grid.size)] = new models.Cell(2,12);
-game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(5,4), game.levels[0].grid.size)] = new models.Cell(1,12);
-
-game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(4,5), game.levels[0].grid.size)] = new models.Cell(2,0);
-game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(4,4), game.levels[0].grid.size)] = new models.Cell(2,0);
-
-game.levels[0].grid.debug();
-var stateUpdate = new webmodels.StateUpdate([]);
-process.updateGrid(game.levels[0], newPlayer, 1, stateUpdate);
-console.log("---------------------------------------");
-for (var i = 0; i < stateUpdate.events.length; i++)
-	console.log(stateUpdate.events[i]);
-stateUpdate = new webmodels.StateUpdate([]);
-process.updateGrid(game.levels[0], newPlayer, 0, stateUpdate);
-console.log("---------------------------------------");
-for (var i = 0; i < stateUpdate.events.length; i++)
-	console.log(stateUpdate.events[i]);
-process.updateGrid(game.levels[0], newPlayer, 0, stateUpdate);
-stateUpdate = new webmodels.StateUpdate([]);
-console.log("---------------------------------------");
-for (var i = 0; i < stateUpdate.events.length; i++)
-	console.log(stateUpdate.events[i]);

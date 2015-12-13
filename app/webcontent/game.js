@@ -73,7 +73,6 @@ var graphics = {
 	camera: null,
 	renderer: null,
 	material: null,
-	mesh: null,
 	meshes: [],
 	ground: null,
 	camera_size: 1.0,
@@ -165,10 +164,70 @@ funcs.ws_on_close = function()
 	}, 2000);
 };
 
+funcs.ws_send = function(packet) {
+	if (global.ws !== null && global.ws.readyState === 1)
+		global.ws.send(JSON.stringify(packet));
+	else
+		funcs.error('WebSocket send error');
+};
+
 funcs.ws_on_message = function(msg)
 {
 	if (msg.type === 'initState')
 		funcs.load_level(msg.level);
+	else if (msg.type === 'stateUpdate') {
+		for (var i = 0; i < msg.events.length; i++) {
+			var event = msg.events[i];
+			if (event.dir !== -1) {
+				// move the mesh
+				var mesh = graphics.meshes[event.cellId];
+				if (mesh)
+					graphics.scene.remove(mesh);
+				graphics.meshes[event.cellId] = null;
+
+				state.values[event.cellId] = 0;
+				state.ids[event.cellId] = 0;
+
+				var nextCellId;
+				switch (event.dir) {
+					case 0: // down
+						nextCellId = event.cellId - state.size.x;
+						break;
+					case 1: // left
+						nextCellId = event.cellId - 1;
+						break;
+					case 2: // up
+						nextCellId = event.cellId + state.size.x;
+						break;
+					case 3: // right
+						nextCellId = event.cellId + 1;
+						break;
+				}
+
+				state.values[nextCellId] = event.value;
+				state.ids[nextCellId] = event.playerId;
+				funcs.set_mesh(nextCellId, event.value, event.playerId);
+			}
+			else if (event.value === 0) {
+				// Kill whatever's there
+				state.values[event.cellId] = event.value;
+				state.ids[event.cellId] = event.playerId;
+
+				var mesh = graphics.meshes[event.cellId];
+				if (mesh)
+					graphics.scene.remove(mesh);
+				graphics.meshes[event.cellId] = null;
+			}
+			else {
+				state.values[event.cellId] = event.value;
+				state.ids[event.cellId] = event.playerId;
+
+				// Update the mesh
+				funcs.set_mesh(event.cellId, event.value, event.playerId);
+			}
+		}
+		funcs.update_camera_target();
+	}
 };
 
 funcs.ws_connect = function()
@@ -202,7 +261,8 @@ funcs.init = function() {
 		0.1, constants.max_camera_size * 4
 	);
 	graphics.camera.rotation.x = Math.PI * 0.2;
-	graphics.camera.rotation.y = Math.PI * 0.1;
+	graphics.camera.rotation.y = Math.PI * 0.08;
+	graphics.camera.rotation.z = Math.PI * 0.08;
 	constants.camera_offset = graphics.camera.getWorldDirection().multiplyScalar(-constants.max_camera_size * 2.0);
 
 	{
@@ -228,9 +288,6 @@ funcs.init = function() {
 		graphics.sunlight.shadow.camera.far = constants.max_camera_size * 5.0;
 		graphics.sunlight.shadow.bias = -0.001;
 	}
-
-	graphics.mesh = funcs.add_mesh(new THREE.BoxGeometry(1, 1, 1), 0xff0000);
-	graphics.mesh.position.z = 0.5;
 
 	graphics.ground = funcs.add_mesh(new THREE.PlaneBufferGeometry(1, 1), 0xffddcc);
 
@@ -376,21 +433,22 @@ funcs.error = function() {
 };
 
 funcs.move = function(dir) {
-	switch (dir) {
-		case constants.directions.left:
-			graphics.mesh.position.x -= 1;
-			break;
-		case constants.directions.right:
-			graphics.mesh.position.x += 1;
-			break;
-		case constants.directions.down:
-			graphics.mesh.position.y -= 1;
-			break;
-		case constants.directions.up:
-			graphics.mesh.position.y += 1;
-			break;
+	funcs.ws_send({ type: 'moveEvent', dir: dir });
+};
+
+funcs.set_mesh = function(i, value, id) {
+	var mesh = graphics.meshes[i];
+	if (!mesh) {
+		mesh = funcs.add_mesh(new THREE.BoxGeometry(1, 1, 1), 0xffffff);
+		graphics.meshes[i] = mesh;
 	}
-	funcs.update_camera_target();
+
+	mesh.material.color = funcs.color_hash(id);
+	mesh.material.needsUpdate = true;
+	var cell_height = value * 0.1;
+	var p = funcs.xy(i);
+	mesh.scale.z = cell_height;
+	mesh.position.set(p.x, p.y, cell_height * 0.5);
 };
 
 funcs.load_level = function(level) {
@@ -414,14 +472,14 @@ funcs.load_level = function(level) {
 
 	graphics.ground.material.map = graphics.texture_loader.load
 	(
-		'TestLevelV2.png',
+		'TestLevelV6.png',
 		function(texture) {
 			texture.minFilter = texture.magFilter = THREE.NearestFilter;
 			graphics.ground.material.needsUpdate = true;
 		},
 		funcs.error
 	);
-
+	
 	for (var i = 0; i < state.values.length; i++)
 	{
 		state.values[i] = level.grid.cells[i].value;
@@ -433,17 +491,9 @@ funcs.load_level = function(level) {
 
 	for (var i = 0; i < state.values.length; i++)
 	{
-		var number = state.values[i];
-		if (number > 0)
-		{
-			var mesh = funcs.add_mesh(new THREE.BoxGeometry(1, 1, cell_height), funcs.color_hash(state.ids[i]));
-
-			graphics.meshes[i] = mesh;
-
-			var cell_height = number * 0.1;
-			var p = funcs.xy(i);
-			mesh.position.set(x, y, cell_height * 0.5);
-		}
+		var value = state.values[i];
+		if (value > 0)
+			funcs.set_mesh(i, value, state.ids[i]);
 	}
 
 	funcs.update_camera_target();
@@ -477,14 +527,18 @@ funcs.load_level = function(level) {
 		down.rotation.z = Math.PI * 0.5;
 	});
 
-	graphics.model_loader.load('3DModels/BuildingV7.js', function(geometry, materials) {
-		for (var i = 0; i < 10; i++) {
-			var tree = funcs.add_mesh(geometry, funcs.color_hash(i), materials);
-			tree.position.x = Math.floor(Math.random() * state.size.x);
-			tree.position.y = Math.floor(Math.random() * state.size.y);
-			graphics.meshes[funcs.id(tree.position.x, tree.position.y)] = tree;
-		}
-	});
+	/*
+	for (var j = 1; j <= 8; j++) {
+		graphics.model_loader.load('3DModels/BuildingV' + j.toString() + '.js', function(geometry, materials) {
+			for (var i = 0; i < 2; i++) {
+				var tree = funcs.add_mesh(geometry, funcs.color_hash(i), materials);
+				tree.position.x = Math.floor(Math.random() * state.size.x);
+				tree.position.y = Math.floor(Math.random() * state.size.y);
+				graphics.meshes[funcs.id(tree.position.x, tree.position.y)] = tree;
+			}
+		});
+	}
+	*/
 };
 
 funcs.add_mesh = function(geometry, color, materials) {
@@ -552,14 +606,13 @@ funcs.xy = function(id)
 };
 
 funcs.update_camera_target = function() {
-	/*
 	var min = new THREE.Vector2(state.size.x, state.size.y);
 	var max = new THREE.Vector2(0, 0);
 	var average = new THREE.Vector2();
 	var count = 0;
 	for (var i = 0; i < state.values.length; i++)
 	{
-		if (state.ids[i] === 1 && state.values[i] > 0)
+		if (state.ids[i] === 12 && state.values[i] > 0)
 		{
 			var p = funcs.xy(i);
 			min.x = Math.min(min.x, p.x);
@@ -574,10 +627,6 @@ funcs.update_camera_target = function() {
 	graphics.camera_pos_target.copy(average);
 	var size = Math.max(max.x - min.x, max.y - min.y);
 	graphics.camera_size_target = Math.min(size + 6, constants.max_camera_size);
-	*/
-
-	graphics.camera_pos_target.set(graphics.mesh.position.x, graphics.mesh.position.y);
-	graphics.camera_size_target = 20.0;
 
 	var d = constants.max_camera_size * 1.5;
 

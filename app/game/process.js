@@ -21,9 +21,12 @@ var generateGrid = function(size){
 var loadLevels = function(){
 	var levels = [];
 	//TODO load from some file
-	var grid = generateGrid(new models.Vec2(8,8));
+	var grid = generateGrid(new models.Vec2(32, 32));
 	var level1 = new models.Level().new(grid);
 	levels.push(level1);
+
+	level1.grid.cells[numaric.vecToIndex(new models.Vec2(4,5), level1.grid.size)] = new models.Cell(2, 0);
+	level1.grid.cells[numaric.vecToIndex(new models.Vec2(4,4), level1.grid.size)] = new models.Cell(2, 0);
 
 	return levels;
 }
