@@ -128,7 +128,7 @@ var Game = function(){
 				var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
 				process.move(level, client.player, event.dir, stateUpdate);
 				if (client.player.nextLevel !== null) {
-					var levelIndex = this.findLeastPopulatedLevel_withDifficulty(client.player.nextLevel);
+					var levelIndex = this.findCompatibleLevel_withDifficulty(client.player.nextLevel);
 					client.player.nextLevel = null;
 					if (levelIndex !== -1) {
 						this.deactivatePlayer(client.player, stateUpdate);
