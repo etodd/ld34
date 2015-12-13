@@ -179,6 +179,7 @@ var assimilateAdjacents = function(cellPos, grid, player, center, stateUpdate) {
 			if (grid.cells[adjacentId].playerId === 0
 				&& adjacentValue > 0) {
 				// pick up adjacent cell
+				player.highestValue = Math.max(player.highestValue, adjacentValue);
 				grid.cells[adjacentId].playerId = player.id;
 				stateUpdate.events.push(new webmodels.Event(adjacentId, -1, player.id, adjacentValue));
 			}
