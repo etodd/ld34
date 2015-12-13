@@ -3,6 +3,7 @@ var models = require("./models.js");
 var Client = function(ws, player){
 	this.ws = ws;
 	this.player = player;
+	this.userName = "anonymous";
 }
 exports.Client = Client;
 
@@ -13,6 +14,7 @@ exports.Client = Client;
 const TYPE_MOVE_EVENT = "moveEvent";
 const TYPE_INIT_STATE = "initState";
 const TYPE_STATE_UPDATE = "stateUpdate";
+const TYPE_SET_USERNAME = "setUsername";
 
 var ClientEvent = function(type, dir){
 	this.type = type;
@@ -20,6 +22,7 @@ var ClientEvent = function(type, dir){
 }
 exports.ClientEvent = ClientEvent;
 exports.ClientEvent.TYPE_MOVE_EVENT = TYPE_MOVE_EVENT;
+exports.ClientEvent.TYPE_SET_USERNAME = TYPE_SET_USERNAME;
 
 
 var Event = function(cellId, dir, playerId, value){

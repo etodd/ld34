@@ -47,6 +47,7 @@ var state = {
 	ids: [],
 	size: new THREE.Vector2(),
 	player: null,
+	userName: "anonymous"
 };
 
 var graphics = {
@@ -241,6 +242,9 @@ funcs.ws_on_message = function(msg)
 funcs.ws_connect = function()
 {
 	global.ws = new WebSocket(constants.ws_url);
+	global.ws.onopen = function(e){
+		funcs.ws_send({type: "setUsername", username: state.userName});
+	}
 	global.ws.onmessage = function(msg)
 	{
 		funcs.ws_on_message(JSON.parse(msg.data));
@@ -744,4 +748,15 @@ funcs.update_camera_target = function() {
 	graphics.sunlight.shadow.camera.updateProjectionMatrix();
 };
 
-$(document).ready(funcs.init);
+$(document).ready(function(){
+	$(".userNamePanel").hide().fadeIn(400);
+	$("#usernameForm").submit(function(e){
+		e.preventDefault();
+		state.userName = $("#usernameInput").val();
+		console.log(state.userName);
+		$("#usernameInput").val("");
+		$(".userNamePanel").fadeOut(400, function(){
+			funcs.init();
+		});
+	});
+});

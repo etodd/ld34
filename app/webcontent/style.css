@@ -1,7 +1,58 @@
 html, body, canvas
 {
+	background-color: #ccddff;
 	padding: 0px !important;
 	border: 0px !important;
 	margin: 0px !important;
 	overflow: hidden !important;
+}
+
+.hidden {
+	display: none;
+}
+
+.userNamePanel {
+    background: -webkit-linear-gradient(#35555B, #072126);
+    background: -o-linear-gradient(#35555B, #072126);
+    background: -moz-linear-gradient(#35555B, #072126);
+    background: linear-gradient(#35555B, #072126);
+
+	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	margin-right: auto;
+	margin-left: auto;
+	margin-top: 10%;
+	width: 30%;
+	height: 100%;
+	min-width: 350px;
+	text-align: center;
+	color: #E3E3E3;
+
+	padding: 3px;
+	border-radius: 4px;
+	border: 1px solid #35555B;
+}
+
+.userNamePanel input {
+    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    background: rgba(255,255,255,.1);
+    border: none;
+    border-radius: 4px;
+    font-size: 18px;
+    margin: 0;
+    outline: 0;
+    padding: 7px;
+    width: 100%;
+    box-sizing: border-box; 
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box; 
+    background-color: #e8eeef;
+    color:#8a97a0;
+    -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset;
+    margin-bottom: 30px;
+    text-align: center;  
+}
+
+.userNamePanel input:focus {
+	background: #d2d9dd;
 }

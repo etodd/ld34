@@ -15,7 +15,7 @@ var Game = function(){
 	});
 
 	this.handleClientConnect = function(ws) {
-		var newPlayer = new models.Player().new(this.clientIdCounter, 0);
+		var newPlayer = new models.Player().new(this.clientIdCounter);
 		this.clientIdCounter++;
 		var client = new webmodels.Client(ws, newPlayer);
 		var initState = this.clientEnterLevel(client, 0);
@@ -111,6 +111,9 @@ var Game = function(){
 			var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
 			process.move(level, client.player, event.dir, stateUpdate);
 			this.sendStateUpdate(stateUpdate);
+
+		} else if (event.type == webmodels.ClientEvent.TYPE_SET_USERNAME){
+			client.userName = event.username;
 		}
 	}
 

@@ -64,9 +64,8 @@ var Player = function(){
 	this.currentLevelIndex = 0;
 	this.highestValue = 1;
 }
-Player.prototype.new = function(id, levelIndex){
+Player.prototype.new = function(id){
 	this.id = id;
-	this.levelIndex = levelIndex;
 	return this;
 }
 Player.prototype.debug = function(){
