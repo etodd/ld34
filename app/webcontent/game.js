@@ -468,7 +468,43 @@ funcs.set_mesh = function(i, value, id) {
 		mesh.position.y = p.y;
 	}
 
-	mesh.material.color = funcs.color_hash(id);
+	var refresh_text = false;
+	if (mesh.children.length > 0) {
+		refresh_text = mesh.children[0].value !== value;
+		if (refresh_text)
+			mesh.remove(mesh.children[0]);
+	}
+	else
+		refresh_text = true;
+
+	if (refresh_text) {
+		var value_string = Math.pow(2, value).toString();
+		var scale = 1.0 - (value_string.length * 0.25);
+		var text_geometry = new THREE.TextGeometry(value_string, {
+			size: 0.8 * scale,
+			height: 0.8 * (2.0 / 7.0) * scale,
+			curveSegments: 4,
+
+			font: 'helvetiker',
+			weight: 'bold',
+			style: 'normal',
+
+			bevelThickness: 0,
+			bevelSize: 0,
+			bevelEnabled: false,
+
+			material: 0,
+			extrudeMaterial: 0
+		});
+		var text = funcs.add_mesh(text_geometry, 0xffffff, null, mesh);
+		text_geometry.computeBoundingBox();
+		text.position.z = 0.5;
+		text.position.x = -0.5 * (text_geometry.boundingBox.max.x - text_geometry.boundingBox.min.x);
+		text.position.y = -0.5 * (text_geometry.boundingBox.max.y - text_geometry.boundingBox.min.y);
+		text.value = value;
+	}
+
+	mesh.material.color.setHex(funcs.color_hash(id));
 	mesh.material.needsUpdate = true;
 	var cell_height = value * 0.1;
 	mesh.scale.z = cell_height;
@@ -571,7 +607,7 @@ funcs.load_level = function(level) {
 	*/
 };
 
-funcs.add_mesh = function(geometry, color, materials) {
+funcs.add_mesh = function(geometry, color, materials, parent) {
 	var material;
 	if (materials)
 	{
@@ -589,7 +625,10 @@ funcs.add_mesh = function(geometry, color, materials) {
 	var mesh = new THREE.Mesh(geometry, material);
 	mesh.castShadow = true;
 	mesh.receiveShadow = true;
-	graphics.scene.add(mesh);
+	if (parent)
+		parent.add(mesh);
+	else
+		graphics.scene.add(mesh);
 	return mesh;
 };
 
