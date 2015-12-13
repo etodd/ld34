@@ -19,11 +19,16 @@ var Game = function(){
 		this.clientIdCounter++;
 		var client = new webmodels.Client(ws, newPlayer);
 
-		var levelIndex = this.findLeastPopulatedLevel_withDifficulty(0);
-
-		var initState = this.clientEnterLevel(client, levelIndex);
-		this.clients.push(client);
-		client.ws.send(JSON.stringify(initState));
+		var levelIndex = this.findCompatibleLevel_withDifficulty(0);
+		console.log("Loading level " + levelIndex);
+		if (levelIndex == -1){
+			console.log("no more levels with that difficulty");
+			return;
+		} else {
+			var initState = this.clientEnterLevel(client, levelIndex);
+			this.clients.push(client);
+			client.ws.send(JSON.stringify(initState));
+		}
 	}
 
 	this.clientEnterLevel = function(client, levelId) {
@@ -81,11 +86,14 @@ var Game = function(){
 	}
 
 	this.handleClientClose = function(ws){
-		var client = this.clients[this.getClientIndexWithWS(ws)];
-		var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
-		this.deactivatePlayer(client.player, stateUpdate);
-		this.removeClientWithWS(ws);
-		this.sendStateUpdate(stateUpdate);
+		var clientIndex = this.getClientIndexWithWS(ws);
+		if (clientIndex != -1){
+			var client = this.clients[clientIndex];
+			var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
+			this.deactivatePlayer(client.player, stateUpdate);
+			this.removeClientWithWS(ws);
+			this.sendStateUpdate(stateUpdate);
+		}
 	}
 
 	this.deactivatePlayer = function(player, stateUpdate) {
@@ -111,38 +119,40 @@ var Game = function(){
 	};
 
 	this.handleClientEvent = function(ws, event){
-		var client = this.clients[this.getClientIndexWithWS(ws)];
-		if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
-			var level = this.levels[client.player.currentLevelIndex];
+		var clientIndex = this.getClientIndexWithWS(ws);
+		if (clientIndex != -1){
+			var client = this.clients[clientIndex];
+			if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
+				var level = this.levels[client.player.currentLevelIndex];
+	
+				var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
+				process.move(level, client.player, event.dir, stateUpdate);
+				if (client.player.nextLevel !== null) {
+					var levelIndex = this.findCompatibleLevel_withDifficulty(client.player.nextLevel);
+					client.player.nextLevel = null;
+					if (levelIndex !== -1) {
+						this.deactivatePlayer(client.player, stateUpdate);
+						var initState = this.clientEnterLevel(client, levelIndex);
+						client.ws.send(JSON.stringify(initState));
+					}
+				}
+				this.sendStateUpdate(stateUpdate);
 
-			var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
-			process.move(level, client.player, event.dir, stateUpdate);
-			if (client.player.nextLevel !== null) {
-				var levelIndex = this.findLeastPopulatedLevel_withDifficulty(client.player.nextLevel);
-				client.player.nextLevel = null;
-				if (levelIndex !== -1) {
-					this.deactivatePlayer(client.player, stateUpdate);
-					var initState = this.clientEnterLevel(client, levelIndex);
-					client.ws.send(JSON.stringify(initState));
+			} else if (event.type == webmodels.ClientEvent.TYPE_RESPAWN){
+				var level = this.levels[client.player.currentLevelIndex];
+	
+				// first, make sure the player has no cells, so we know it's safe to spawn
+				var spawn = true;
+				for (var i = 0; i < level.grid.cells.length; i++) {
+					if (level.grid.cells[i].playerId === client.player.id) {
+						spawn = false;
+						break;
+					}
+					
+					if (spawn)
+						this.spawnPlayer(level, client.player);
 				}
 			}
-			this.sendStateUpdate(stateUpdate);
-		} else if (event.type == webmodels.ClientEvent.TYPE_SET_USERNAME){
-			client.userName = event.username;
-		} else if (event.type == webmodels.ClientEvent.TYPE_RESPAWN){
-			var level = this.levels[client.player.currentLevelIndex];
-
-			// first, make sure the player has no cells, so we know it's safe to spawn
-			var spawn = true;
-			for (var i = 0; i < level.grid.cells.length; i++) {
-				if (level.grid.cells[i].playerId === client.player.id) {
-					spawn = false;
-					break;
-				}
-			}
-			
-			if (spawn)
-				this.spawnPlayer(level, client.player);
 		}
 	}
 
@@ -223,29 +233,24 @@ var Game = function(){
 	};
 	setInterval(this.randomSpawn.bind(this), 2000);
 
-	this.findLeastPopulatedLevel_withDifficulty = function(difficulty){
+	this.findCompatibleLevel_withDifficulty = function(difficulty){
 		var levelClientCount = [];
 		for (var i = 0; i < this.levels.length; ++i){ levelClientCount.push(0); }
 		for (var i = 0; i < this.clients.length; ++i){
 			levelClientCount[this.clients[i].player.currentLevelIndex] += 1;
 		}
 
-		var leastPopIndex = -1;
-		var leastPopAmnt = -1;
 		for (var i = 0; i < this.levels.length; ++i){
 
 			if (this.levels[i].difficulty == difficulty){
 
 				var levelClientAmnt = levelClientCount[i];
-				console.log(levelClientAmnt);
-				if (levelClientAmnt < leastPopAmnt || i == 0){
-
-					leastPopAmnt = levelClientAmnt;
-					leastPopIndex = i;
+				if (levelClientAmnt+1 <= this.levels[i].maxPlayers){
+					return i;
 				}
 			}
 		}
-		return leastPopIndex;
+		return -1;
 	}
 }
 exports.Game = Game;

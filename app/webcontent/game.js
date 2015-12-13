@@ -50,7 +50,6 @@ var state = {
 	ids: [],
 	size: new THREE.Vector2(),
 	player: null,
-	username: null,
 	respawn_timer: 0,
 	is_alive: false,
 };
@@ -251,7 +250,7 @@ funcs.ws_connect = function()
 {
 	global.ws = new WebSocket(constants.ws_url);
 	global.ws.onopen = function(e){
-		funcs.ws_send({type: "setUsername", username: state.username});
+
 	}
 	global.ws.onmessage = function(msg)
 	{
@@ -271,8 +270,7 @@ funcs.color_hash = function(id) {
 	return constants.other_player_colors[id % constants.other_player_colors.length];
 };
 
-funcs.init = function(username) {
-	state.username = localStorage['username'] = username;
+funcs.init = function() {
 	graphics.model_loader.load('3DModels/exit.js', function(geometry, materials) {
 		graphics.exit_geometry = geometry;
 		graphics.exit_texture = graphics.texture_loader.load
@@ -804,18 +802,5 @@ funcs.update_camera_target = function() {
 };
 
 $(document).ready(function(){
-	$(".userNamePanel").hide();
-	if (localStorage['username'])
-		funcs.init(localStorage['username']);
-	else {
-		$(".userNamePanel").fadeIn(400);
-		$("#userNameForm").submit(function(e){
-			e.preventDefault();
-			var username = $("#userNameInput").val();
-			$("#userNameInput").val("");
-			$(".userNamePanel").fadeOut(400, function(){
-				funcs.init(username);
-			});
-		});
-	}
+	funcs.init();
 });
