@@ -36,7 +36,7 @@ var Pixel = function(r,g,b,a){
 			return RANDOM_SPAWN;
 
 		} else {
-			return RANDOM_SPAWN;
+			return 0;
 		}
 	}
 }

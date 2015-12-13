@@ -21,6 +21,9 @@ var generateGrid = function(size){
 
 var loadLevels = function(){
 	var levels = [];
+
+	levels.push(loadLevelFromDisk("webcontent/TestLevel7.png"));
+	
 	//TODO load from some file
 	var grid = generateGrid(new models.Vec2(32, 32));
 	var level1 = new models.Level().new(grid);
@@ -29,13 +32,11 @@ var loadLevels = function(){
 	level1.grid.cells[numaric.vecToIndex(new models.Vec2(4,5), level1.grid.size)] = new models.Cell(2, 0);
 	level1.grid.cells[numaric.vecToIndex(new models.Vec2(4,4), level1.grid.size)] = new models.Cell(2, 0);
 
-	//levels.push(loadeLevelFromDisk(""));
-
 	return levels;
 }
 exports.loadLevels = loadLevels;
 
-var loadeLevelFromDisk = function(filename){
+var loadLevelFromDisk = function(filename){
 	var img = new imgLoader.ImageLoader(filename);
 	var grid = new models.Grid([], new models.Vec2(img.width, img.height));
 
