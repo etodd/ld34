@@ -22,6 +22,7 @@ Pixel.prototype.getType = function(){
 		return STAIR_CONNECTOR_LVL_1;
 	}
 };
+exports.OBSTICLE = OBSTICLE;
 
 var loadImage = function(filename, callback) {
 	getPixels(filename, function(err, pixels) {

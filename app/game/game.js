@@ -193,5 +193,27 @@ var Game = function(){
 		}
 	};
 	setInterval(this.randomSpawn.bind(this), 2000);
+
+	this.findLeastPopulatedLevel_withDifficulty = function(difficulty){
+		var levelClientCount = [];
+		for (var i = 0; i < this.levels.length; ++i){ levelClientCount.push(0); }
+		for (var i = 0; i < this.clients.length; ++i){
+			levelClientCount[this.clients[i].currentLevelIndex] += 1;
+		}
+
+		var leastPopIndex = -1;
+		var leastPopAmnt = -1;
+		for (var i = 0; i < this.levels.length; ++i){
+			if (this.levels[i].difficulty == difficulty){
+				var levelClientAmnt = levelClientCount[i];
+				if (levelClientCount < leastPopAmnt){
+					leastPopAmnt = levelClientCount;
+					leastPopIndex = i;
+				}
+			}
+		}
+		console.log('LeastPop amnt: ' + leastPopAmnt);
+		return leastPopIndex;
+	}
 }
 exports.Game = Game;

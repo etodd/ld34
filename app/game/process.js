@@ -47,7 +47,15 @@ var loadLevelFromDisk = function(levelData, output, callback){
 			var p = numaric.indexToVec(i, grid.size);
 			p.y = (grid.size.y - 1) - p.y;
 			var new_index = numaric.vecToIndex(p, grid.size);
-			grid.cells[new_index] = new models.Cell(img.data[i].getType(), 0);
+
+			var cellType = img.data[i].getType();
+			if (cellType < imgLoader.OBSTICLE){ //is it a staircase to another level
+				//use playerID to indicate what level difficulty
+				grid.cells[new_index] = new models.Cell(0, cellType);
+
+			} else {
+				grid.cells[new_index] = new models.Cell(cellType, 0);
+			}
 		}
 		output.push(new models.Level().new(grid, levelData.difficulty));
 		callback();
