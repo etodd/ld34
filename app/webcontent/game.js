@@ -63,6 +63,7 @@ var state = {
 	values: [],
 	ids: [],
 	size: new THREE.Vector2(),
+	player: null,
 };
 
 var graphics = {
@@ -174,8 +175,10 @@ funcs.ws_send = function(packet) {
 
 funcs.ws_on_message = function(msg)
 {
-	if (msg.type === 'initState')
+	if (msg.type === 'initState') {
+		state.player = msg.player;
 		funcs.load_level(msg.level);
+	}
 	else if (msg.type === 'stateUpdate') {
 		for (var i = 0; i < msg.events.length; i++) {
 			var event = msg.events[i];
@@ -662,8 +665,8 @@ funcs.animate = function() {
 	graphics.camera_pos.lerp(graphics.camera_pos_target, dt * 10.0);
 
 	graphics.camera_size = graphics.camera_size < graphics.camera_size_target
-		? Math.min(graphics.camera_size_target, graphics.camera_size + dt * 3.0)
-		: Math.max(graphics.camera_size_target, graphics.camera_size - dt * 3.0);
+		? Math.min(graphics.camera_size_target, graphics.camera_size + dt * 10.0)
+		: Math.max(graphics.camera_size_target, graphics.camera_size - dt * 10.0);
 
 	graphics.camera.position.set(graphics.camera_pos.x, graphics.camera_pos.y, 0).add(constants.camera_offset);
 
@@ -697,27 +700,40 @@ funcs.xy = function(id)
 };
 
 funcs.update_camera_target = function() {
-	var min = new THREE.Vector2(state.size.x, state.size.y);
-	var max = new THREE.Vector2(0, 0);
-	var average = new THREE.Vector2();
-	var count = 0;
-	for (var i = 0; i < state.values.length; i++)
-	{
-		if (state.ids[i] === 12 && state.values[i] > 0)
+	var has_player = false;
+	if (state.player) {
+		var min = new THREE.Vector2(state.size.x, state.size.y);
+		var max = new THREE.Vector2(0, 0);
+		graphics.camera_pos_target.set(0, 0);
+		var count = 0;
+		for (var i = 0; i < state.values.length; i++)
 		{
-			var p = funcs.xy(i);
-			min.x = Math.min(min.x, p.x);
-			min.y = Math.min(min.y, p.y);
-			max.x = Math.max(max.x, p.x);
-			max.y = Math.max(max.y, p.y);
-			average.add(p);
-			count++;
+			if (state.ids[i] === state.player.id && state.values[i] > 0)
+			{
+				var p = funcs.xy(i);
+				min.x = Math.min(min.x, p.x);
+				min.y = Math.min(min.y, p.y);
+				max.x = Math.max(max.x, p.x);
+				max.y = Math.max(max.y, p.y);
+				graphics.camera_pos_target.add(p);
+				count++;
+			}
+		}
+
+		if (count > 0) {
+			has_player = true;
+			graphics.camera_pos_target.multiplyScalar(1.0 / count);
+			var size = Math.max(max.x - min.x, max.y - min.y);
+			graphics.camera_size_target = Math.min(size + 6, constants.max_camera_size);
 		}
 	}
-	average.multiplyScalar(1.0 / count);
-	graphics.camera_pos_target.copy(average);
-	var size = Math.max(max.x - min.x, max.y - min.y);
-	graphics.camera_size_target = Math.min(size + 6, constants.max_camera_size);
+
+	if (!has_player) {
+		graphics.camera_pos_target.copy(state.size);
+		graphics.camera_pos_target.multiplyScalar(0.5);
+		var size = Math.max(state.size.x, state.size.y);
+		graphics.camera_size_target = Math.min(size, constants.max_camera_size);
+	}
 
 	var d = constants.max_camera_size * 1.5;
 

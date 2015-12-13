@@ -22,7 +22,7 @@ var generateGrid = function(size){
 var loadLevels = function(){
 	var levels = [];
 
-	levels.push(loadLevelFromDisk("webcontent/TestLevel7.png"));
+	//levels.push(loadLevelFromDisk("webcontent/TestLevel7.png"));
 	
 	//TODO load from some file
 	var grid = generateGrid(new models.Vec2(32, 32));
@@ -57,7 +57,18 @@ var loadLevelFromDisk = function(filename){
 
 */
 
-var updateGrid = function(level, player, dir, stateUpdate){
+var set = function(level, player, cellPos, cell, stateUpdate){
+	var cellId = numaric.vecToIndex(cellPos, level.grid.size);
+	var oldCell = level.grid.cells[cellId];
+	if (oldCell.value !== cell.value || oldCell.playerId !== cell.playerId) {
+		oldCell.playerId = cell.playerId;
+		oldCell.value = cell.value;
+		stateUpdate.events.push(new webmodels.Event(cellId, -1, cell.playerId, cell.value));
+	}
+}
+exports.set = set;
+
+var move = function(level, player, dir, stateUpdate){
 	var u_dir = getReverse(dir);
 	var v_dir = getPerpendicular(u_dir);
 	for (var u = 0; u < Math.abs(level.grid.size.get(getPositiveDir(u_dir), level.grid.size)); ++u){
@@ -69,7 +80,7 @@ var updateGrid = function(level, player, dir, stateUpdate){
 		}
 	}
 }
-exports.updateGrid = updateGrid;
+exports.move = move;
 
 var updateCell = function(cellPos, player, grid, dir, stateUpdate){
 	var cellId = numaric.vecToIndex(cellPos, grid.size);

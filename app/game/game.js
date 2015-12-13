@@ -5,6 +5,7 @@ var numaric = require("../utils/numaric.js");
 
 var Game = function(){
 	this.clients = [];
+	this.clientIdCounter = 1;
 	this.levels = [];
 
 	this.init = function(){
@@ -12,25 +13,27 @@ var Game = function(){
 	}
 
 	this.handleClientConnect = function(ws){
-		var newPlayer = new models.Player().new(12, 0);
+		var newPlayer = new models.Player().new(this.clientIdCounter, 0);
+		this.clientIdCounter++;
 		var client = new webmodels.Client(ws, newPlayer);
-		this.clients.push(client);
 
 		//give client init state with a level
 		var currentLevel = this.levels[client.player.currentLevelIndex];
 
-		currentLevel.grid.cells[numaric.vecToIndex(new models.Vec2(5, 5), currentLevel.grid.size)] = new models.Cell(2, newPlayer.id);
-		currentLevel.grid.cells[numaric.vecToIndex(new models.Vec2(5, 4), currentLevel.grid.size)] = new models.Cell(1, newPlayer.id);
+		var stateUpdate = new webmodels.StateUpdate([]);
+		var cell = new models.Cell(2, newPlayer.id);
+		process.set(currentLevel, client.player, new models.Vec2(5, 5), cell, stateUpdate);
+		process.set(currentLevel, client.player, new models.Vec2(5, 4), cell, stateUpdate);
+		this.sendStateUpdate(stateUpdate);
+
+		this.clients.push(client);
 
 		var initState = new webmodels.State(currentLevel, client.player);
 		client.ws.send(JSON.stringify(initState));
-
-		console.log("opened Client amnt: " + this.clients.length);
 	}
 
 	this.handleClientClose = function(ws){
 		this.removeClientWithWS(ws);
-		console.log("closed Client amnt: " + this.clients.length);
 	}
 
 	this.handleClientEvent = function(ws, event){
@@ -39,10 +42,8 @@ var Game = function(){
 			var level = this.levels[client.player.currentLevelIndex];
 
 			var stateUpdate = new webmodels.StateUpdate([]);
-			process.updateGrid(level, client.player, event.dir, stateUpdate);
+			process.move(level, client.player, event.dir, stateUpdate);
 			this.sendStateUpdate(stateUpdate);
-
-			console.log("client move event");
 		}
 	}
 
