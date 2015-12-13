@@ -104,11 +104,13 @@ exports.Grid = Grid;
 
 var Level = function(){
 	this.difficulty = 0; //numaric aka 0(lvl1), 1(lvl2), 2(lcl3)
+	this.maxPlayers = 1;
 	this.grid = null;
 }
-Level.prototype.new = function(initalGrid, difficulty){
+Level.prototype.new = function(initalGrid, difficulty, maxPlayersPer){
 	this.difficulty = difficulty;
 	this.grid = initalGrid;
+	this.maxPlayers = maxPlayersPer;
 	return this;
 }
 Level.prototype.debug = function(){

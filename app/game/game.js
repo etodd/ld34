@@ -19,7 +19,12 @@ var Game = function(){
 		this.clientIdCounter++;
 		var client = new webmodels.Client(ws, newPlayer);
 
-		var levelIndex = this.findLeastPopulatedLevel_withDifficulty(0);
+		var levelIndex = this.findCompatibleLevel_withDifficulty(0);
+		console.log("Loading level " + levelIndex);
+		if (levelIndex == -1){
+			console.log("no more levels with that difficulty");
+			return;
+		}
 
 		var initState = this.clientEnterLevel(client, levelIndex);
 		this.clients.push(client);
@@ -197,29 +202,24 @@ var Game = function(){
 	};
 	setInterval(this.randomSpawn.bind(this), 2000);
 
-	this.findLeastPopulatedLevel_withDifficulty = function(difficulty){
+	this.findCompatibleLevel_withDifficulty = function(difficulty){
 		var levelClientCount = [];
 		for (var i = 0; i < this.levels.length; ++i){ levelClientCount.push(0); }
 		for (var i = 0; i < this.clients.length; ++i){
 			levelClientCount[this.clients[i].player.currentLevelIndex] += 1;
 		}
 
-		var leastPopIndex = -1;
-		var leastPopAmnt = -1;
 		for (var i = 0; i < this.levels.length; ++i){
 
 			if (this.levels[i].difficulty == difficulty){
 
 				var levelClientAmnt = levelClientCount[i];
-				console.log(levelClientAmnt);
-				if (levelClientAmnt < leastPopAmnt || i == 0){
-
-					leastPopAmnt = levelClientAmnt;
-					leastPopIndex = i;
+				if (levelClientAmnt+1 <= this.levels[i].maxPlayers){
+					return i;
 				}
 			}
 		}
-		return leastPopIndex;
+		return -1;
 	}
 }
 exports.Game = Game;
