@@ -17,11 +17,9 @@ var generateGrid = function(size){
 
 var loadLevels = function(output, callback){
 	var levelData = [
-		{filename: 'webcontent/level0.png', difficulty: 0, maxPlayers: 2},
-		{filename: 'webcontent/level1.png', difficulty: 1, maxPlayers: 2},
-		{filename: 'webcontent/level2.png', difficulty: 2, maxPlayers: 2},
-		{filename: 'webcontent/level2.png', difficulty: 0, maxPlayers: 2},
-		{filename: 'webcontent/level2.png', difficulty: 0, maxPlayers: 2},
+		{filename: 'webcontent/level0.png', difficulty: 0, maxPlayers: 4},
+		{filename: 'webcontent/level1.png', difficulty: 1, maxPlayers: 4},
+		{filename: 'webcontent/level2.png', difficulty: 2, maxPlayers: 4},
 	];
 
 	var index = 0;
