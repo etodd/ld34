@@ -63,6 +63,7 @@ var Player = function(){
 	this.id = null;
 	this.currentLevelIndex = 0;
 	this.highestValue = 1;
+	this.nextLevel = null;
 }
 Player.prototype.new = function(id){
 	this.id = id;

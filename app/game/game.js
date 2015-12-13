@@ -89,15 +89,16 @@ var Game = function(){
 		var clientIndex = this.getClientIndexWithWS(ws);
 		if (clientIndex != -1){
 			var client = this.clients[clientIndex];
-			this.deactivatePlayer(client.player);
+			var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
+			this.deactivatePlayer(client.player, stateUpdate);
 			this.removeClientWithWS(ws);
+			this.sendStateUpdate(stateUpdate);
 		}
 	}
 
-	this.deactivatePlayer = function(player) {
+	this.deactivatePlayer = function(player, stateUpdate) {
 		var level = this.levels[player.currentLevelIndex];
 		var stats = level.grid.stats();
-		var stateUpdate = new webmodels.StateUpdate(player.currentLevelIndex, []);
 		if (stats.filled > stats.totalPlayable * 0.2) {
 			// too crowded. delete the cells
 			var empty = new models.Cell(0, 0);
@@ -115,23 +116,31 @@ var Game = function(){
 					process.set(level, numaric.indexToVec(i, level.grid.size), new models.Cell(cell.value, 1), stateUpdate);
 			}
 		}
-		this.sendStateUpdate(stateUpdate);
 	};
 
 	this.handleClientEvent = function(ws, event){
 		var clientIndex = this.getClientIndexWithWS(ws);
 		if (clientIndex != -1){
-			var client = this.clients[clientIndex];
+			var client = this.clients[this.getClientIndexWithWS(ws)];
 			if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
 				var level = this.levels[client.player.currentLevelIndex];
-
+	
 				var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
 				process.move(level, client.player, event.dir, stateUpdate);
+				if (client.player.nextLevel !== null) {
+					var levelIndex = this.findLeastPopulatedLevel_withDifficulty(client.player.nextLevel);
+					client.player.nextLevel = null;
+					if (levelIndex !== -1) {
+						this.deactivatePlayer(client.player, stateUpdate);
+						var initState = this.clientEnterLevel(client, levelIndex);
+						client.ws.send(JSON.stringify(initState));
+					}
+				}
 				this.sendStateUpdate(stateUpdate);
 
 			} else if (event.type == webmodels.ClientEvent.TYPE_RESPAWN){
 				var level = this.levels[client.player.currentLevelIndex];
-
+	
 				// first, make sure the player has no cells, so we know it's safe to spawn
 				var spawn = true;
 				for (var i = 0; i < level.grid.cells.length; i++) {
@@ -139,10 +148,10 @@ var Game = function(){
 						spawn = false;
 						break;
 					}
+					
+					if (spawn)
+						this.spawnPlayer(level, client.player);
 				}
-				
-				if (spawn)
-					this.spawnPlayer(level, client.player);
 			}
 		}
 	}
