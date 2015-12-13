@@ -3,7 +3,6 @@ var models = require("./models.js");
 var Client = function(ws, player){
 	this.ws = ws;
 	this.player = player;
-	this.userName = "anonymous";
 }
 exports.Client = Client;
 
