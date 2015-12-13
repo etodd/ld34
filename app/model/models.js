@@ -62,6 +62,7 @@ exports.Cell.NULL_PLAYER_ID = NULL_PLAYER_ID;
 var Player = function(){
 	this.id = null;
 	this.currentLevelIndex = 0;
+	this.highestValue = 1;
 }
 Player.prototype.new = function(id, levelIndex){
 	this.id = id;
@@ -79,6 +80,17 @@ var Grid = function(cells, size){
 	this.size = size;
 	this.cells = cells;
 }
+Grid.prototype.stats = function() {
+	var result = { totalPlayable: 0, filled: 0 };
+	for (var j = 0; j < this.cells.length; j++) {
+		var value = this.cells[j].value;
+		if (value > 0)
+			result.filled++;
+		if (value >= 0)
+			result.totalPlayable++;
+	}
+	return result;
+};
 Grid.prototype.debug = function(){
 	for (var y = this.size.y - 1; y >= 0; --y){
 		var line = "";

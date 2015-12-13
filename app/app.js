@@ -17,6 +17,10 @@ app.ws("/event", function(ws, req){
 	ws.on('close', function(msg){
 		game.handleClientClose(ws);
 	});
+
+	ws.on('error', function(msg){
+		game.handleClientClose(ws);
+	});
 });
 
 var server = app.listen(3000, function (){

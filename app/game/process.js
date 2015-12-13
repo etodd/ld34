@@ -15,14 +15,31 @@ var generateGrid = function(size){
 	return grid;
 }
 
-var loadLevels = function(output){
-	loadLevelFromDisk('webcontent/TestLevelV10.png', output);
-	loadLevelFromDisk('webcontent/TestLevelV11.png', output);
-	loadLevelFromDisk('webcontent/TestLevelV12.png', output);
+var loadLevels = function(output, callback){
+	var filenames = [
+		'webcontent/TestLevelV10.png',
+		'webcontent/TestLevelV11.png',
+		'webcontent/TestLevelV12.png',
+	];
+
+	var index = 0;
+
+	var levelDone;
+	levelDone = function() {
+		if (index < filenames.length) {
+			loadLevelFromDisk(filenames[index], output, levelDone);
+			index++;
+		}
+		else {
+			console.log('Loaded ' + filenames.length + ' levels.');
+			callback(); // all done
+		}
+	};
+	levelDone();
 }
 exports.loadLevels = loadLevels;
 
-var loadLevelFromDisk = function(filename, output){
+var loadLevelFromDisk = function(filename, output, callback){
 	imgLoader.loadImage(filename, function(img) {
 		var grid = new models.Grid(new Array(img.width * img.height), new models.Vec2(img.width, img.height));
 
@@ -34,12 +51,9 @@ var loadLevelFromDisk = function(filename, output){
 		}
 
 		output.push(new models.Level().new(grid));
+		callback();
 	});
 }
-
-/*
-
-*/
 
 var set = function(level, cellPos, cell, stateUpdate){
 	var cellId = numaric.vecToIndex(cellPos, level.grid.size);
@@ -111,10 +125,11 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 			if (nextCellValue !== 0) {
 				// something is in the way
 				if (nextCellValue == cellValue) {
-					// merge into
+					// merge into next cell
 					var withinRange = isWithinRange(center, nextCellPos);
 					var newValue = cellValue + 1;
 					var newPlayerId = withinRange ? player.id : 0;
+					player.highestValue = Math.max(player.highestValue, newValue);
 					grid.cells[nextCellId].value = newValue;
 					grid.cells[nextCellId].playerId = newPlayerId;
 					grid.cells[cellId].value = 0;
@@ -122,7 +137,7 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 					stateUpdate.events.push(new webmodels.Event(cellId, dir, newPlayerId, newValue));
 
 					if (withinRange)
-						assimilateAdjacents(nextCellPos, grid, player, stateUpdate);
+						assimilateAdjacents(nextCellPos, grid, player, center, stateUpdate);
 				}
 				else {
 					// can't merge. do nothing
@@ -148,16 +163,17 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 				stateUpdate.events.push(new webmodels.Event(cellId, dir, newPlayerId, newValue));
 
 				if (withinRange)
-					assimilateAdjacents(nextCellPos, grid, player, stateUpdate);
+					assimilateAdjacents(nextCellPos, grid, player, center, stateUpdate);
 			}
 		}
 	}
 }
 
-var assimilateAdjacents = function(cellPos, grid, player, stateUpdate) {
+var assimilateAdjacents = function(cellPos, grid, player, center, stateUpdate) {
 	for (var i = 0; i < directions.length; i++) {
 		var adjacent = cellPos.add(directions[i]);
-		if (adjacent.x >= 0 && adjacent.x < grid.size.x && adjacent.y >= 0 && adjacent.y < grid.size.y) {
+		if (adjacent.x >= 0 && adjacent.x < grid.size.x && adjacent.y >= 0 && adjacent.y < grid.size.y
+			&& isWithinRange(center, adjacent)) {
 			var adjacentId = numaric.vecToIndex(adjacent, grid.size);
 			var adjacentValue = grid.cells[adjacentId].value;
 			if (grid.cells[adjacentId].playerId === 0

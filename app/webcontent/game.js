@@ -471,11 +471,11 @@ funcs.set_mesh = function(i, value, id) {
 
 	if (refresh_text) {
 		var value_string = Math.pow(2, value).toString();
-		var scale = 1.0 - (value_string.length * 0.25);
+		var scale = value_string.length === 1 ? 1.0 : 1.5 / value_string.length;
 		var text_geometry = new THREE.TextGeometry(value_string, {
-			size: 0.8 * scale,
-			height: 0.8 * (2.0 / 7.0) * scale,
-			curveSegments: 4,
+			size: 0.6 * scale,
+			height: 0.6 * (2.0 / 7.0) * scale,
+			curveSegments: 2,
 
 			font: 'helvetiker',
 			weight: 'bold',
@@ -491,7 +491,7 @@ funcs.set_mesh = function(i, value, id) {
 		var text = funcs.add_mesh(text_geometry, 0xffffff, null, mesh);
 		text_geometry.computeBoundingBox();
 		text.position.z = 0.5;
-		text.position.x = -0.5 * (text_geometry.boundingBox.max.x - text_geometry.boundingBox.min.x);
+		text.position.x = -0.05 - 0.5 * (text_geometry.boundingBox.max.x - text_geometry.boundingBox.min.x);
 		text.position.y = -0.5 * (text_geometry.boundingBox.max.y - text_geometry.boundingBox.min.y);
 		text.value = value;
 	}
