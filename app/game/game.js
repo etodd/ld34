@@ -29,25 +29,31 @@ var Game = function(){
 	this.clientEnterLevel = function(client, levelId) {
 		// give client init state with a level
 		client.player.currentLevelIndex = levelId;
-		var currentLevel = this.levels[levelId];
+		var level = this.levels[levelId];
 
+		this.spawnPlayer(level, client.player);
+
+		return new webmodels.State(level, client.player);
+	}
+
+	this.spawnPlayer = function(level, player) {
 		// find a spawn point
 		var spawnPoint = null;
 		var p = new models.Vec2(0, 0);
-		for (var i = 0; i < currentLevel.grid.cells.length; i++) {
-			var candidateId = Math.floor(Math.random() * currentLevel.grid.cells.length);
-			var candidate = numaric.indexToVec(candidateId, currentLevel.grid.size);
+		for (var i = 0; i < level.grid.cells.length; i++) {
+			var candidateId = Math.floor(Math.random() * level.grid.cells.length);
+			var candidate = numaric.indexToVec(candidateId, level.grid.size);
 
-			if (currentLevel.grid.cells[candidateId].value !== 0)
+			if (level.grid.cells[candidateId].value !== 0)
 				continue; // can't spawn here, something in the way
 			else if (spawnPoint === null)
 				spawnPoint = candidate;
 
 			// check if there's room around the spawn area
 			var conflict = false;
-			for (p.x = Math.max(0, candidate.x - 4); p.x < Math.min(candidate.x + 5, currentLevel.grid.size.x); p.x++) {
-				for (p.y = Math.max(0, candidate.y - 4); p.y < Math.min(candidate.y + 5, currentLevel.grid.size.y); p.y++) {
-					var cell = currentLevel.grid.cells[numaric.vecToIndex(p, currentLevel.grid.size)];
+			for (p.x = Math.max(0, candidate.x - 4); p.x < Math.min(candidate.x + 5, level.grid.size.x); p.x++) {
+				for (p.y = Math.max(0, candidate.y - 4); p.y < Math.min(candidate.y + 5, level.grid.size.y); p.y++) {
+					var cell = level.grid.cells[numaric.vecToIndex(p, level.grid.size)];
 					if (cell.playerId !== 0 || cell.id < 0) {
 						conflict = true;
 						break;
@@ -67,13 +73,11 @@ var Game = function(){
 			spawnPoint = new models.Vec2(0, 0);
 
 		// spawn a block
-		var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
+		var stateUpdate = new webmodels.StateUpdate(player.currentLevelIndex, []);
 
-		process.set(currentLevel, spawnPoint, new models.Cell(client.player.highestValue, client.player.id), stateUpdate);
-		process.assimilateAdjacents(spawnPoint, currentLevel.grid, client.player, spawnPoint, stateUpdate);
+		process.set(level, spawnPoint, new models.Cell(player.highestValue, player.id), stateUpdate);
+		process.assimilateAdjacents(spawnPoint, level.grid, player, spawnPoint, stateUpdate);
 		this.sendStateUpdate(stateUpdate);
-
-		return new webmodels.State(currentLevel, client.player);
 	}
 
 	this.handleClientClose = function(ws){
@@ -117,6 +121,20 @@ var Game = function(){
 
 		} else if (event.type == webmodels.ClientEvent.TYPE_SET_USERNAME){
 			client.userName = event.username;
+		} else if (event.type == webmodels.ClientEvent.TYPE_RESPAWN){
+			var level = this.levels[client.player.currentLevelIndex];
+
+			// first, make sure the player has no cells, so we know it's safe to spawn
+			var spawn = true;
+			for (var i = 0; i < level.grid.cells.length; i++) {
+				if (level.grid.cells[i].playerId === client.player.id) {
+					spawn = false;
+					break;
+				}
+			}
+			
+			if (spawn)
+				this.spawnPlayer(level, client.player);
 		}
 	}
 

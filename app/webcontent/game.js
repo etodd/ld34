@@ -4,6 +4,7 @@ var constants = {
 	ws_url: null,
 	max_camera_size: 25.0,
 	camera_offset: new THREE.Vector3(),
+	respawn_delay: 3.0,
 	other_player_colors: [
 		0xff0000,
 		0xcc7700,
@@ -48,6 +49,8 @@ var state = {
 	size: new THREE.Vector2(),
 	player: null,
 	username: null,
+	respawn_timer: 0,
+	is_alive: false,
 };
 
 var graphics = {
@@ -662,9 +665,17 @@ funcs.complete_animation = function(anim) {
 };
 
 funcs.animate = function() {
+	requestAnimationFrame(funcs.animate);
+
 	var dt = global.clock.getDelta();
 
-	requestAnimationFrame(funcs.animate);
+	if (!state.is_alive) {
+		state.respawn_timer += dt;
+		if (state.respawn_timer > constants.respawn_delay) {
+			state.respawn_timer = 0.0;
+			funcs.ws_send({ type: 'respawn' });
+		}
+	}
 
 	for (var i = 0; i < graphics.animations.length; i++) {
 		var anim = graphics.animations[i];
@@ -691,11 +702,11 @@ funcs.animate = function() {
 	funcs.update_projection();
 
 	graphics.renderer.render(graphics.scene, graphics.camera);
-}
+};
 
 funcs.on_resize = function() {
 	graphics.renderer.setSize(window.innerWidth, window.innerHeight);
-}
+};
 
 funcs.update_projection = function() {
 	var min_size = window.innerWidth < window.innerHeight ? window.innerWidth : window.innerHeight;
@@ -718,7 +729,7 @@ funcs.xy = function(id)
 };
 
 funcs.update_camera_target = function() {
-	var has_player = false;
+	state.is_alive = false;
 	if (state.player) {
 		var min = new THREE.Vector2(state.size.x, state.size.y);
 		var max = new THREE.Vector2(0, 0);
@@ -739,14 +750,14 @@ funcs.update_camera_target = function() {
 		}
 
 		if (count > 0) {
-			has_player = true;
+			state.is_alive = true;
 			graphics.camera_pos_target.multiplyScalar(1.0 / count);
 			var size = Math.max(max.x - min.x, max.y - min.y);
 			graphics.camera_size_target = Math.min(size + 6, constants.max_camera_size);
 		}
 	}
 
-	if (!has_player) {
+	if (!state.is_alive) {
 		graphics.camera_pos_target.copy(state.size);
 		graphics.camera_pos_target.multiplyScalar(0.5);
 		var size = Math.max(state.size.x, state.size.y);
