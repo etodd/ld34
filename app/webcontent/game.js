@@ -1,7 +1,7 @@
 // state
 
 var constants = {
-	ws_url: (window.location.protocol === 'http:' ? 'ws://' : 'wss://') + window.location.host + '/event',
+	ws_url: null,
 	max_camera_size: 25.0,
 	camera_offset: new THREE.Vector3(),
 	other_player_colors: [
@@ -53,6 +53,8 @@ var state = {
 var graphics = {
 	animations: [],
 	scenery: [],
+	exit_geometry: null,
+	exit_texture: null,
 	texture_loader: new THREE.TextureLoader(),
 	model_loader: new THREE.JSONLoader(),
 	scene: null,
@@ -265,6 +267,18 @@ funcs.color_hash = function(id) {
 
 funcs.init = function(username) {
 	state.username = localStorage['username'] = username;
+	graphics.model_loader.load('3DModels/exit.js', function(geometry, materials) {
+		graphics.exit_geometry = geometry;
+		graphics.exit_texture = graphics.texture_loader.load
+		(
+			'3DModels/exit.png',
+			funcs.done_loading,
+			funcs.error
+		);
+	});
+};
+
+funcs.done_loading = function() {
 	global.clock.start();
 
 	window.addEventListener('resize', funcs.on_resize, false);
@@ -447,12 +461,42 @@ funcs.on_mouseup = function(event) {
 	event.preventDefault();
 };
 
-funcs.error = function() {
+funcs.error = function(e) {
+	console.log('ERROR');
+	console.log(e);
 	// TODO: error handling
 };
 
 funcs.move = function(dir) {
 	funcs.ws_send({ type: 'moveEvent', dir: dir });
+};
+
+funcs.create_value_text = function(value, parent) {
+	var value_string = Math.pow(2, value).toString();
+	var scale = value_string.length === 1 ? 1.0 : 1.5 / value_string.length;
+	var text_geometry = new THREE.TextGeometry(value_string, {
+		size: 0.6 * scale,
+		height: 0.2,
+		curveSegments: 2,
+
+		font: 'helvetiker',
+		weight: 'bold',
+		style: 'normal',
+
+		bevelThickness: 0,
+		bevelSize: 0,
+		bevelEnabled: false,
+
+		material: 0,
+		extrudeMaterial: 0
+	});
+	var text = funcs.add_mesh(text_geometry, 0xffffff, null, parent);
+	text_geometry.computeBoundingBox();
+	text.position.z = 0.5;
+	text.position.x = -0.05 - 0.5 * (text_geometry.boundingBox.max.x - text_geometry.boundingBox.min.x);
+	text.position.y = -0.5 * (text_geometry.boundingBox.max.y - text_geometry.boundingBox.min.y);
+	text.value = value;
+	return text;
 };
 
 funcs.set_mesh = function(i, value, id) {
@@ -474,32 +518,8 @@ funcs.set_mesh = function(i, value, id) {
 	else
 		refresh_text = true;
 
-	if (refresh_text) {
-		var value_string = Math.pow(2, value).toString();
-		var scale = value_string.length === 1 ? 1.0 : 1.5 / value_string.length;
-		var text_geometry = new THREE.TextGeometry(value_string, {
-			size: 0.6 * scale,
-			height: 0.6 * (2.0 / 7.0) * scale,
-			curveSegments: 2,
-
-			font: 'helvetiker',
-			weight: 'bold',
-			style: 'normal',
-
-			bevelThickness: 0,
-			bevelSize: 0,
-			bevelEnabled: false,
-
-			material: 0,
-			extrudeMaterial: 0
-		});
-		var text = funcs.add_mesh(text_geometry, 0xffffff, null, mesh);
-		text_geometry.computeBoundingBox();
-		text.position.z = 0.5;
-		text.position.x = -0.05 - 0.5 * (text_geometry.boundingBox.max.x - text_geometry.boundingBox.min.x);
-		text.position.y = -0.5 * (text_geometry.boundingBox.max.y - text_geometry.boundingBox.min.y);
-		text.value = value;
-	}
+	if (refresh_text)
+		funcs.create_value_text(value, mesh);
 
 	mesh.material.color.setHex(funcs.color_hash(id));
 	mesh.material.needsUpdate = true;
@@ -531,6 +551,8 @@ funcs.spawn_scenery = function(cell_id, value) {
 };
 
 funcs.load_level = function(level) {
+
+	// clear old stuff
 	for (var i = 0; i < graphics.scenery.length; i++)
 		graphics.scene.remove(graphics.scenery[i]);
 	graphics.scenery.length = 0;
@@ -549,6 +571,8 @@ funcs.load_level = function(level) {
 			graphics.meshes[i] = null;
 		}
 	}
+
+	// load new stuff
 
 	state.size.set(level.grid.size.x, level.grid.size.y);
 	state.values = new Array(state.size.x * state.size.y);
@@ -577,42 +601,32 @@ funcs.load_level = function(level) {
 	for (var i = 0; i < state.values.length; i++)
 	{
 		var value = state.values[i];
-		if (value > 0)
-			funcs.set_mesh(i, value, state.ids[i]);
-		else if (value < 0)
-			funcs.spawn_scenery(i, value);
+		if (value > 0) {
+			if (state.ids[i] < 0) {
+				console.log(value);
+				// must be an exit
+				var exit = new THREE.Object3D();//THREE.Mesh(graphics.exit_geometry, new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, blending: THREE.NormalBlending, map: graphics.exit_texture }));
+				graphics.scene.add(exit);
+				graphics.scenery.push(exit);
+				exit.position.x = 0.5 * state.size.x;
+				exit.position.y = 0.5 * state.size.y;
+				exit.scale.z = 3.0;
+				var text = funcs.create_value_text(value, exit);
+				text.position.z = text.scale.z = 1.0 / exit.scale.z;
+			}
+			else // normal number
+				funcs.set_mesh(i, value, state.ids[i]);
+		}
+		else if (value < 0) {
+			if (value === -1)
+				funcs.spawn_scenery(i, value);
+		}
 	}
 
 	funcs.update_camera_target();
 
 	graphics.camera_pos.copy(graphics.camera_pos_target);
 	graphics.camera_size = graphics.camera_size_target;
-
-	graphics.model_loader.load('3DModels/StairsV2.js', function(geometry, materials) {
-		var up = funcs.add_mesh(geometry, 0xffffff, materials);
-		graphics.scenery.push(up);
-		up.position.x = 0.5 * state.size.x;
-		up.position.y = 1.0 * state.size.y;
-		up.rotation.z = Math.PI * -0.5;
-
-		var left = funcs.add_mesh(geometry, 0xffffff, materials);
-		graphics.scenery.push(left);
-		left.position.x = 0.0 * state.size.x - 1;
-		left.position.y = 0.5 * state.size.y;
-		left.rotation.z = Math.PI * 0;
-
-		var right = funcs.add_mesh(geometry, 0xffffff, materials);
-		graphics.scenery.push(right);
-		right.position.x = 1.0 * state.size.x;
-		right.position.y = 0.5 * state.size.y;
-		right.rotation.z = Math.PI * 1;
-
-		var down = funcs.add_mesh(geometry, 0xffffff, materials);
-		graphics.scenery.push(down);
-		down.position.x = 0.5 * state.size.x;
-		down.position.y = 0 * state.size.y - 1;
-		down.rotation.z = Math.PI * 0.5;
-	});
 };
 
 funcs.add_mesh = function(geometry, color, materials, parent) {

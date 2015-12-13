@@ -7,6 +7,13 @@
 		<script src="TextGeometry.js"></script>
 		<script src="FontUtils.js"></script>
 		<script src="game.js"></script>
+		<script>
+			var protocol = (window.location.protocol === 'http:' ? 'ws://' : 'wss://');
+			if (/^localhost/.test(window.location.host))
+				constants.ws_url = protocol + window.location.host + '/event';
+			else
+				constants.ws_url = 'ws://45.55.77.202:3000/event'; // prod
+		</script>
 		<script src="helvetiker_bold.typeface.js"></script>
 		<link href="style.css" rel="stylesheet" type="text/css" />
 	</head>

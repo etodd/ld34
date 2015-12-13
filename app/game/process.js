@@ -17,9 +17,9 @@ var generateGrid = function(size){
 
 var loadLevels = function(output, callback){
 	var levelData = [
-		{filename: 'webcontent/TestLevelV10.png', difficulty: 0},
-		{filename: 'webcontent/TestLevelV11.png', difficulty: 1},
-		{filename: 'webcontent/TestLevelV12.png', difficulty: 2},
+		{filename: 'webcontent/level0.png', difficulty: 0},
+		{filename: 'webcontent/level1.png', difficulty: 1},
+		{filename: 'webcontent/level2.png', difficulty: 2},
 	];
 
 	var index = 0;
@@ -46,8 +46,21 @@ var loadLevelFromDisk = function(levelData, output, callback){
 		for (var i = 0; i < img.data.length; i++){
 			var p = numaric.indexToVec(i, grid.size);
 			p.y = (grid.size.y - 1) - p.y;
-			var new_index = numaric.vecToIndex(p, grid.size);
-			grid.cells[new_index] = new models.Cell(img.data[i].getType(), 0);
+			var newIndex = numaric.vecToIndex(p, grid.size);
+
+			var pixel = img.data[i];
+			if (pixel.a === 0) {
+				// empty
+				grid.cells[newIndex] = new models.Cell(0, 0);
+			} else if (pixel.r === 255 && pixel.g === 255 && pixel.b === 255) {
+				// obstacle
+				grid.cells[newIndex] = new models.Cell(-1, 0);
+			} else {
+				// exit
+				// r = threshold value required to use the exit
+				// g = level difficulty index to teleport to
+				grid.cells[newIndex] = new models.Cell(pixel.r, -pixel.g);
+			}
 		}
 		output.push(new models.Level().new(grid, levelData.difficulty));
 		callback();
@@ -121,33 +134,7 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 			var nextCellId = numaric.vecToIndex(nextCellPos, grid.size);
 			var cellValue = grid.cells[cellId].value;
 			var nextCellValue = grid.cells[nextCellId].value;
-			if (nextCellValue !== 0) {
-				// something is in the way
-				if (nextCellValue == cellValue) {
-					// merge into next cell
-					var withinRange = isWithinRange(center, nextCellPos);
-					var newValue = cellValue + 1;
-					var newPlayerId = withinRange ? player.id : 0;
-					player.highestValue = Math.max(player.highestValue, newValue);
-					grid.cells[nextCellId].value = newValue;
-					grid.cells[nextCellId].playerId = newPlayerId;
-					grid.cells[cellId].value = 0;
-					grid.cells[cellId].playerId = 0;
-					stateUpdate.events.push(new webmodels.Event(cellId, dir, newPlayerId, newValue));
-
-					if (withinRange)
-						assimilateAdjacents(nextCellPos, grid, player, center, stateUpdate);
-				}
-				else {
-					// can't merge. do nothing
-					// check if we need to deactivate this cell
-					if (!isWithinRange(center, cellPos)) {
-						grid.cells[cellId].playerId = 0;
-						stateUpdate.events.push(new webmodels.Event(cellId, -1, 0, grid.cells[cellId].value));
-					}
-				}
-			}
-			else {
+			if (nextCellValue === 0) {
 				// nothing in the way. move there
 				var withinRange = isWithinRange(center, nextCellPos);
 				var newValue = cellValue;
@@ -163,6 +150,37 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 
 				if (withinRange)
 					assimilateAdjacents(nextCellPos, grid, player, center, stateUpdate);
+			}
+			else {
+				// something is in the way
+				if (nextCellValue == cellValue) {
+					if (grid.cells[nextCellId].playerId < 0) {
+						// map exit; let's go!
+					}
+					else {
+						// merge into next cell
+						var withinRange = isWithinRange(center, nextCellPos);
+						var newValue = cellValue + 1;
+						var newPlayerId = withinRange ? player.id : 0;
+						player.highestValue = Math.max(player.highestValue, newValue);
+						grid.cells[nextCellId].value = newValue;
+						grid.cells[nextCellId].playerId = newPlayerId;
+						grid.cells[cellId].value = 0;
+						grid.cells[cellId].playerId = 0;
+						stateUpdate.events.push(new webmodels.Event(cellId, dir, newPlayerId, newValue));
+
+						if (withinRange)
+							assimilateAdjacents(nextCellPos, grid, player, center, stateUpdate);
+					}
+				}
+				else {
+					// can't merge. do nothing
+					// check if we need to deactivate this cell
+					if (!isWithinRange(center, cellPos)) {
+						grid.cells[cellId].playerId = 0;
+						stateUpdate.events.push(new webmodels.Event(cellId, -1, 0, grid.cells[cellId].value));
+					}
+				}
 			}
 		}
 	}
