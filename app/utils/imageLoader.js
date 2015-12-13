@@ -29,3 +29,4 @@ var ImageLoader = function(filename){
 		that.height = pixels.shape[1];
 	});
 }
+exports.ImageLoader = ImageLoader;
