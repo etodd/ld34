@@ -2,6 +2,7 @@ var models = require("../model/models.js");
 var webmodels = require("../model/webmodels.js");
 var numaric = require("../utils/numaric.js");
 var deepcopy = require('deepcopy');
+var imgLoader = require("../utils/imageLoader.js");
 
 var generateGrid = function(size){
 	var grid = new models.Grid([], size);
@@ -28,9 +29,28 @@ var loadLevels = function(){
 	level1.grid.cells[numaric.vecToIndex(new models.Vec2(4,5), level1.grid.size)] = new models.Cell(2, 0);
 	level1.grid.cells[numaric.vecToIndex(new models.Vec2(4,4), level1.grid.size)] = new models.Cell(2, 0);
 
+	//levels.push(loadeLevelFromDisk(""));
+
 	return levels;
 }
 exports.loadLevels = loadLevels;
+
+var loadeLevelFromDisk = function(filename){
+	var img = new imgLoader.ImageLoader(filename);
+	var grid = new models.Grid([], new models.Vec2(img.width, img.height));
+
+	for (var x = 0; x < grid.size.x; ++x){
+		for (var y = 0; y < grid.size.y; ++y){
+			var pixel = grid.data[numaric.vecToIndex(new models.Vec2(x,y), grid.size)];
+
+			var cell = new models.Cell(0, pixel.getType());
+			grid.cells.push(cell);
+		}
+	}
+
+	var level = new models.Level().new(grid);
+	return level;
+}
 
 /*
 
