@@ -476,7 +476,7 @@ funcs.create_value_text = function(value, parent) {
 	var scale = value_string.length === 1 ? 1.0 : 1.5 / value_string.length;
 	var text_geometry = new THREE.TextGeometry(value_string, {
 		size: 0.6 * scale,
-		height: 0.2,
+		height: 0.1,
 		curveSegments: 2,
 
 		font: 'helvetiker',
@@ -603,16 +603,15 @@ funcs.load_level = function(level) {
 		var value = state.values[i];
 		if (value > 0) {
 			if (state.ids[i] < 0) {
-				console.log(value);
 				// must be an exit
-				var exit = new THREE.Object3D();//THREE.Mesh(graphics.exit_geometry, new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, blending: THREE.NormalBlending, map: graphics.exit_texture }));
+				var exit = new THREE.Mesh(graphics.exit_geometry, new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, blending: THREE.NormalBlending, map: graphics.exit_texture }));
 				graphics.scene.add(exit);
 				graphics.scenery.push(exit);
-				exit.position.x = 0.5 * state.size.x;
-				exit.position.y = 0.5 * state.size.y;
-				exit.scale.z = 3.0;
+				var p = funcs.xy(i);
+				exit.position.x = p.x;
+				exit.position.y = p.y;
 				var text = funcs.create_value_text(value, exit);
-				text.position.z = text.scale.z = 1.0 / exit.scale.z;
+				text.castShadow = false;
 			}
 			else // normal number
 				funcs.set_mesh(i, value, state.ids[i]);
