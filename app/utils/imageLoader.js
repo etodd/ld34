@@ -29,5 +29,3 @@ var ImageLoader = function(filename){
 		that.height = pixels.shape[1];
 	});
 }
-
-var img = new ImageLoader("test.png");
