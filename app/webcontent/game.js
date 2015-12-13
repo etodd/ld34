@@ -66,6 +66,7 @@ var state = {
 };
 
 var graphics = {
+	animations: [],
 	scenery: [],
 	texture_loader: new THREE.TextureLoader(),
 	model_loader: new THREE.JSONLoader(),
@@ -178,37 +179,7 @@ funcs.ws_on_message = function(msg)
 	else if (msg.type === 'stateUpdate') {
 		for (var i = 0; i < msg.events.length; i++) {
 			var event = msg.events[i];
-			if (event.dir !== -1) {
-				// move the mesh
-				var mesh = graphics.meshes[event.cellId];
-				if (mesh)
-					graphics.scene.remove(mesh);
-				graphics.meshes[event.cellId] = null;
-
-				state.values[event.cellId] = 0;
-				state.ids[event.cellId] = 0;
-
-				var nextCellId;
-				switch (event.dir) {
-					case 0: // down
-						nextCellId = event.cellId - state.size.x;
-						break;
-					case 1: // left
-						nextCellId = event.cellId - 1;
-						break;
-					case 2: // up
-						nextCellId = event.cellId + state.size.x;
-						break;
-					case 3: // right
-						nextCellId = event.cellId + 1;
-						break;
-				}
-
-				state.values[nextCellId] = event.value;
-				state.ids[nextCellId] = event.playerId;
-				funcs.set_mesh(nextCellId, event.value, event.playerId);
-			}
-			else if (event.value === 0) {
+			if (event.value === 0) {
 				// Kill whatever's there
 				state.values[event.cellId] = event.value;
 				state.ids[event.cellId] = event.playerId;
@@ -219,11 +190,62 @@ funcs.ws_on_message = function(msg)
 				graphics.meshes[event.cellId] = null;
 			}
 			else {
-				state.values[event.cellId] = event.value;
-				state.ids[event.cellId] = event.playerId;
+				if (event.dir !== -1) {
+					// move the mesh
+					state.values[event.cellId] = 0;
+					state.ids[event.cellId] = 0;
 
-				// Update the mesh
-				funcs.set_mesh(event.cellId, event.value, event.playerId);
+					var nextCellId;
+					switch (event.dir) {
+						case 0: // down
+							nextCellId = event.cellId - state.size.x;
+							break;
+						case 1: // left
+							nextCellId = event.cellId - 1;
+							break;
+						case 2: // up
+							nextCellId = event.cellId + state.size.x;
+							break;
+						case 3: // right
+							nextCellId = event.cellId + 1;
+							break;
+					}
+
+					state.values[nextCellId] = event.value;
+					state.ids[nextCellId] = event.playerId;
+
+					for (var j = 0; j < graphics.animations.length; j++) {
+						if (graphics.animations[j].new_cell === event.cellId) {
+							funcs.complete_animation(graphics.animations[j]);
+							graphics.animations.splice(j, 1);
+							j--;
+						}
+					}
+
+					var mesh = graphics.meshes[event.cellId];
+					var remove_mesh = graphics.meshes[nextCellId];
+					graphics.meshes[event.cellId] = null;
+					graphics.meshes[nextCellId] = mesh;
+
+					graphics.animations.push({
+						mesh: mesh,
+						remove_mesh: remove_mesh,
+						new_cell: nextCellId,
+						pos: funcs.xy(event.cellId),
+						new_pos: funcs.xy(nextCellId),
+						blend: 0,
+						value: event.value,
+						id: event.playerId,
+					});
+				}
+				else
+				{
+					state.values[event.cellId] = event.value;
+					state.ids[event.cellId] = event.playerId;
+
+					// Just update the mesh
+					funcs.set_mesh(event.cellId, event.value, event.playerId);
+				}
 			}
 		}
 		funcs.update_camera_target();
@@ -441,20 +463,28 @@ funcs.set_mesh = function(i, value, id) {
 	if (!mesh) {
 		mesh = funcs.add_mesh(new THREE.BoxGeometry(1, 1, 1), 0xffffff);
 		graphics.meshes[i] = mesh;
+		var p = funcs.xy(i);
+		mesh.position.x = p.x;
+		mesh.position.y = p.y;
 	}
 
 	mesh.material.color = funcs.color_hash(id);
 	mesh.material.needsUpdate = true;
 	var cell_height = value * 0.1;
-	var p = funcs.xy(i);
 	mesh.scale.z = cell_height;
-	mesh.position.set(p.x, p.y, cell_height * 0.5);
+	mesh.position.z = cell_height * 0.5;
 };
 
 funcs.load_level = function(level) {
 	for (var i = 0; i < graphics.scenery.length; i++)
 		graphics.scene.remove(graphics.scenery[i]);
 	graphics.scenery.length = 0;
+	for (var i = 0; i < graphics.animations.length; i++) {
+		var anim = graphics.animations[i];
+		if (anim.remove_mesh)
+			graphics.scene.remove(anim.remove_mesh);
+	}
+	graphics.animations.length = 0;
 
 	for (var i = 0; i < graphics.meshes.length; i++)
 	{
@@ -563,25 +593,47 @@ funcs.add_mesh = function(geometry, color, materials) {
 	return mesh;
 };
 
+funcs.complete_animation = function(anim) {
+	if (anim.remove_mesh)
+		graphics.scene.remove(anim.remove_mesh);
+	anim.mesh.position.x = anim.new_pos.x;
+	anim.mesh.position.y = anim.new_pos.y;
+	funcs.set_mesh(anim.new_cell, anim.value, anim.id);
+};
+
 funcs.animate = function() {
 	var dt = global.clock.getDelta();
 
 	requestAnimationFrame(funcs.animate);
 
-	graphics.renderer.render(graphics.scene, graphics.camera);
+	for (var i = 0; i < graphics.animations.length; i++) {
+		var anim = graphics.animations[i];
+		anim.blend += dt * 15.0;
+		if (anim.blend > 1.0) {
+			funcs.complete_animation(anim);
+			graphics.animations.splice(i, 1);
+			i--;
+		}
+		else {
+			anim.mesh.position.x = anim.pos.x + (anim.new_pos.x - anim.pos.x) * anim.blend;
+			anim.mesh.position.y = anim.pos.y + (anim.new_pos.y - anim.pos.y) * anim.blend;
+		}
+	}
 
 	graphics.camera_pos.lerp(graphics.camera_pos_target, dt * 10.0);
 
 	graphics.camera_size = graphics.camera_size < graphics.camera_size_target
-		? Math.min(graphics.camera_size_target, graphics.camera_size + dt)
-		: Math.max(graphics.camera_size_target, graphics.camera_size - dt);
+		? Math.min(graphics.camera_size_target, graphics.camera_size + dt * 3.0)
+		: Math.max(graphics.camera_size_target, graphics.camera_size - dt * 3.0);
 
 	graphics.camera.position.set(graphics.camera_pos.x, graphics.camera_pos.y, 0).add(constants.camera_offset);
+
 	funcs.update_projection();
+
+	graphics.renderer.render(graphics.scene, graphics.camera);
 }
 
 funcs.on_resize = function() {
-	funcs.update_projection();
 	graphics.renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
