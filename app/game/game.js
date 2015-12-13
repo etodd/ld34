@@ -82,14 +82,15 @@ var Game = function(){
 
 	this.handleClientClose = function(ws){
 		var client = this.clients[this.getClientIndexWithWS(ws)];
-		this.deactivatePlayer(client.player);
+		var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
+		this.deactivatePlayer(client.player, stateUpdate);
 		this.removeClientWithWS(ws);
+		this.sendStateUpdate(stateUpdate);
 	}
 
-	this.deactivatePlayer = function(player) {
+	this.deactivatePlayer = function(player, stateUpdate) {
 		var level = this.levels[player.currentLevelIndex];
 		var stats = level.grid.stats();
-		var stateUpdate = new webmodels.StateUpdate(player.currentLevelIndex, []);
 		if (stats.filled > stats.totalPlayable * 0.2) {
 			// too crowded. delete the cells
 			var empty = new models.Cell(0, 0);
@@ -107,7 +108,6 @@ var Game = function(){
 					process.set(level, numaric.indexToVec(i, level.grid.size), new models.Cell(cell.value, 1), stateUpdate);
 			}
 		}
-		this.sendStateUpdate(stateUpdate);
 	};
 
 	this.handleClientEvent = function(ws, event){
@@ -117,8 +117,16 @@ var Game = function(){
 
 			var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
 			process.move(level, client.player, event.dir, stateUpdate);
+			if (client.player.nextLevel !== null) {
+				var levelIndex = this.findLeastPopulatedLevel_withDifficulty(client.player.nextLevel);
+				client.player.nextLevel = null;
+				if (levelIndex !== -1) {
+					this.deactivatePlayer(client.player, stateUpdate);
+					var initState = this.clientEnterLevel(client, levelIndex);
+					client.ws.send(JSON.stringify(initState));
+				}
+			}
 			this.sendStateUpdate(stateUpdate);
-
 		} else if (event.type == webmodels.ClientEvent.TYPE_SET_USERNAME){
 			client.userName = event.username;
 		} else if (event.type == webmodels.ClientEvent.TYPE_RESPAWN){

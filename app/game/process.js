@@ -156,6 +156,7 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 				if (nextCellValue == cellValue) {
 					if (grid.cells[nextCellId].playerId < 0) {
 						// map exit; let's go!
+						player.nextLevel = -grid.cells[nextCellId].playerId;
 					}
 					else {
 						// merge into next cell
@@ -204,28 +205,6 @@ var assimilateAdjacents = function(cellPos, grid, player, center, stateUpdate) {
 	}
 };
 exports.assimilateAdjacents = assimilateAdjacents;
-
-var moveCell = function(cellId, nextCellId, grid, newGrid){
-	var playerId = grid.cells[cellId].playerId;
-	var value = grid.cells[cellId].value;
-
-	newGrid.cells[nextCellId].playerId = playerId;
-	newGrid.cells[nextCellId].value = value;
-}
-
-var getAdjacentCells = function(cellId, grid){
-	var cells = [];
-
-	return cells;
-}
-
-var getNextCellId = function(cellId, grid, dir){
-	var directionVec = getDirectionEnum(dir);
-	var v1 = numaric.indexToVec(cellId, grid.size);
-	var v2 = v1.add(directionVec);
-	var nextCellId = numaric.vecToIndex(v2, grid.size);
-	return nextCellId;
-}
 
 var directions = [];
 directions.push(new models.Vec2(0,-1));
