@@ -3,11 +3,7 @@ var app = express();
 var expressWs = require('express-ws')(app);
 var gameLib = require('./game/game.js');
 
-var updateIntervalMillis = 17; //*60 ~= 1 sec
 var game = new gameLib.Game();
-setInterval(function(){
-	game.update();
-}, updateIntervalMillis);
 
 app.use(express.static('webcontent'));
 

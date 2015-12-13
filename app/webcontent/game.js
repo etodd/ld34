@@ -4,59 +4,42 @@ var constants = {
 	ws_url: (window.location.protocol === 'http:' ? 'ws://' : 'wss://') + window.location.host + '/event',
 	max_camera_size: 25.0,
 	camera_offset: new THREE.Vector3(),
+	other_player_colors: [
+		0xff0000,
+		0xcc7700,
+		0xdd2200,
+		0xcc7700,
+		0xaa5500,
+		0xee6600,
+		0xff2200,
+		0xaa1100,
+		0xcc0000,
+	],
+	scenery_filenames: [
+		null,
+		['StairsV2.js'],
+		[
+			'BuildingV1.js',
+			'BuildingV2.js',
+			'BuildingV3.js',
+			'BuildingV4.js',
+			'BuildingV5.js',
+			'BuildingV6.js',
+			'BuildingV7.js',
+			'BuildingV8.js',
+			'BuildingV9.js',
+		],
+		['FencePostV1.js', 'FenceWallV1.js'],
+		['RockV3.js'],
+		['TreeV4.js', 'TreeV5.js'],
+		['CylinderV2.js'],
+	],
 	directions: {
 		down: 0,
 		left: 1,
 		up: 2,
 		right: 3,
 	},
-	color_table: [
-		0x555555,
-		0xff0000,
-		0xff4400,
-		0xff6600,
-		0xff8800,
-		0xffaa00,
-		0xffbb00,
-		0xaa9900,
-		0x99aa00,
-		0x77aa00,
-		0x55aa00,
-		0x33aa00,
-		0x11aa00,
-		0x00bb00,
-		0x009900,
-		0x008800,
-		0x008822,
-		0x008844,
-		0x00aa66,
-		0x00aa88,
-		0x00aaaa,
-		0x00aacc,
-		0x00aadd,
-		0x0088dd,
-		0x0066dd,
-		0x0044dd,
-		0x0022dd,
-		0x0000dd,
-		0x0044ff,
-		0x0022ff,
-		0x0000ff,
-		0x2200ff,
-		0x4400ff,
-		0x6600ff,
-		0x8800ff,
-		0xaa00ff,
-		0xcc00ff,
-		0xee00ff,
-		0xff00ee,
-		0xff00cc,
-		0xff00aa,
-		0xff0088,
-		0xff0066,
-		0xff0044,
-		0xff0022,
-	],
 };
 
 var state = {
@@ -265,9 +248,15 @@ funcs.ws_connect = function()
 	global.ws.onclose = funcs.ws_on_close;
 };
 
-
 funcs.color_hash = function(id) {
-	return constants.color_table[id % constants.color_table.length];
+	if (id === 0)
+		return 0x888888;
+	else if (id === 1)
+		return 0x111111;
+	else if (state.player !== null && id === state.player.id)
+		return 0x001188;
+
+	return constants.other_player_colors[id % constants.other_player_colors.length];
 };
 
 funcs.init = function() {
@@ -514,6 +503,28 @@ funcs.set_mesh = function(i, value, id) {
 	mesh.position.z = cell_height * 0.5;
 };
 
+funcs.spawn_scenery = function(cell_id, value) {
+	var scenery = funcs.add_mesh(new THREE.BoxGeometry(1, 1, 1), 0x333333);
+	var scenery_pos = funcs.xy(cell_id);
+	scenery.position.x = scenery_pos.x;
+	scenery.position.y = scenery_pos.y;
+	scenery.position.z = 0.5;
+	graphics.scenery.push(scenery);
+	/*
+	var filenames = constants.scenery_filenames[-value];
+	var filename = filenames[Math.floor(Math.random() * filenames.length)];
+
+	var scenery_cell_index = cell_id;
+	graphics.model_loader.load('3DModels/' + filename, function(geometry, materials) {
+		var scenery = funcs.add_mesh(geometry, 0xffffff, materials);
+		var scenery_pos = funcs.xy(scenery_cell_index);
+		scenery.position.x = scenery_pos.x;
+		scenery.position.y = scenery_pos.y;
+		graphics.scenery.push(scenery);
+	});
+	*/
+};
+
 funcs.load_level = function(level) {
 	for (var i = 0; i < graphics.scenery.length; i++)
 		graphics.scene.remove(graphics.scenery[i]);
@@ -541,7 +552,7 @@ funcs.load_level = function(level) {
 
 	graphics.ground.material.map = graphics.texture_loader.load
 	(
-		'TestLevelV6.png',
+		'test.png',
 		function(texture) {
 			texture.minFilter = texture.magFilter = THREE.NearestFilter;
 			graphics.ground.material.needsUpdate = true;
@@ -563,6 +574,8 @@ funcs.load_level = function(level) {
 		var value = state.values[i];
 		if (value > 0)
 			funcs.set_mesh(i, value, state.ids[i]);
+		else if (value < 0)
+			funcs.spawn_scenery(i, value);
 	}
 
 	funcs.update_camera_target();
@@ -570,7 +583,7 @@ funcs.load_level = function(level) {
 	graphics.camera_pos.copy(graphics.camera_pos_target);
 	graphics.camera_size = graphics.camera_size_target;
 
-	graphics.model_loader.load('3DModels/StairsV1.js', function(geometry, materials) {
+	graphics.model_loader.load('3DModels/StairsV2.js', function(geometry, materials) {
 		var up = funcs.add_mesh(geometry, 0xffffff, materials);
 		graphics.scenery.push(up);
 		up.position.x = 0.5 * state.size.x;
@@ -579,7 +592,7 @@ funcs.load_level = function(level) {
 
 		var left = funcs.add_mesh(geometry, 0xffffff, materials);
 		graphics.scenery.push(left);
-		left.position.x = 0.0 * state.size.x;
+		left.position.x = 0.0 * state.size.x - 1;
 		left.position.y = 0.5 * state.size.y;
 		left.rotation.z = Math.PI * 0;
 
@@ -592,22 +605,9 @@ funcs.load_level = function(level) {
 		var down = funcs.add_mesh(geometry, 0xffffff, materials);
 		graphics.scenery.push(down);
 		down.position.x = 0.5 * state.size.x;
-		down.position.y = 0 * state.size.y;
+		down.position.y = 0 * state.size.y - 1;
 		down.rotation.z = Math.PI * 0.5;
 	});
-
-	/*
-	for (var j = 1; j <= 8; j++) {
-		graphics.model_loader.load('3DModels/BuildingV' + j.toString() + '.js', function(geometry, materials) {
-			for (var i = 0; i < 2; i++) {
-				var tree = funcs.add_mesh(geometry, funcs.color_hash(i), materials);
-				tree.position.x = Math.floor(Math.random() * state.size.x);
-				tree.position.y = Math.floor(Math.random() * state.size.y);
-				graphics.meshes[funcs.id(tree.position.x, tree.position.y)] = tree;
-			}
-		});
-	}
-	*/
 };
 
 funcs.add_mesh = function(geometry, color, materials, parent) {

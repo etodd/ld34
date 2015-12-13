@@ -30,7 +30,8 @@ var Event = function(cellId, dir, playerId, value){
 }
 exports.Event = Event;
 
-var StateUpdate = function(events){
+var StateUpdate = function(level_id, events){
+	this.level_id = level_id;
 	this.type = TYPE_STATE_UPDATE;
 	this.events = events;
 }
