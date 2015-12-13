@@ -33,7 +33,7 @@ exports.loadLevels = loadLevels;
 
 */
 
-var updateGrid = function(level, player, dir){
+var updateGrid = function(level, player, dir, stateUpdate){
 	var u_dir = getReverse(dir);
 	var v_dir = getPerpendicular(u_dir);
 	for (var u = 0; u < Math.abs(level.grid.size.get(getPositiveDir(u_dir), level.grid.size)); ++u){
@@ -41,18 +41,17 @@ var updateGrid = function(level, player, dir){
 			var p = new models.Vec2();
 			p.set(u_dir, level.grid.size, u);
 			p.set(v_dir, level.grid.size, v);
-			updateCell(p, player, level.grid, dir);
+			updateCell(p, player, level.grid, dir, stateUpdate);
 		}
 	}
 }
 exports.updateGrid = updateGrid;
 
-var updateCell = function(cellPos, player, grid, dir){
+var updateCell = function(cellPos, player, grid, dir, stateUpdate){
 	var cellId = numaric.vecToIndex(cellPos, grid.size);
 	if (grid.cells[cellId].playerId === player.id){
 		var nextCellPos = cellPos.add(getDirectionEnum(dir));
 		if (nextCellPos.x < 0 || nextCellPos.x >= grid.size.x || nextCellPos.y < 0 || nextCellPos.y >= grid.size.y) {
-			console.log('stuck');
 			// out of bounds. do nothing
 		}
 		else{
@@ -62,15 +61,17 @@ var updateCell = function(cellPos, player, grid, dir){
 			if (nextCellValue > 0) {
 				// something is in the way
 				if (nextCellValue == cellValue) {
-					console.log('merge');
 					// merge into
-					grid.cells[nextCellId].value = cellValue + 1;
+					var newValue = cellValue + 1;
+					grid.cells[nextCellId].value = newValue;
 					grid.cells[nextCellId].playerId = player.id;
 					grid.cells[cellId].value = 0;
 					grid.cells[cellId].playerId = 0;
+					stateUpdate.events.push(new webmodels.Event(cellId, dir, player.id, newValue));
+
+					assimilateAdjacents(nextCellPos, grid, player, stateUpdate);
 				}
 				else {
-					console.log('stuck2');
 					// can't merge. do nothing
 				}
 			}
@@ -78,12 +79,33 @@ var updateCell = function(cellPos, player, grid, dir){
 				// nothing in the way. move there
 				grid.cells[nextCellId].value = cellValue;
 				grid.cells[nextCellId].playerId = player.id;
+
 				grid.cells[cellId].value = 0;
 				grid.cells[cellId].playerId = 0;
+
+				stateUpdate.events.push(new webmodels.Event(cellId, dir, player.id, cellValue));
+
+				assimilateAdjacents(nextCellPos, grid, player, stateUpdate);
 			}
 		}
 	}
 }
+
+var assimilateAdjacents = function(cellPos, grid, player, stateUpdate) {
+	for (var i = 0; i < directions.length; i++) {
+		var adjacent = cellPos.add(directions[i]);
+		if (adjacent.x >= 0 && adjacent.x < grid.size.x && adjacent.y >= 0 && adjacent.y < grid.size.y) {
+			var adjacentId = numaric.vecToIndex(adjacent, grid.size);
+			var adjacentValue = grid.cells[adjacentId].value;
+			if (grid.cells[adjacentId].playerId === 0
+				&& adjacentValue > 0) {
+				// pick up adjacent cell
+				grid.cells[adjacentId].playerId = player.id;
+				stateUpdate.events.push(new webmodels.Event(adjacentId, -1, player.id, adjacentValue));
+			}
+		}
+	}
+};
 
 var moveCell = function(cellId, nextCellId, grid, newGrid){
 	var playerId = grid.cells[cellId].playerId;

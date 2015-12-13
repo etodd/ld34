@@ -414,7 +414,7 @@ funcs.load_level = function(level) {
 
 	graphics.ground.material.map = graphics.texture_loader.load
 	(
-		'test.png',
+		'TestLevelV2.png',
 		function(texture) {
 			texture.minFilter = texture.magFilter = THREE.NearestFilter;
 			graphics.ground.material.needsUpdate = true;
@@ -477,7 +477,7 @@ funcs.load_level = function(level) {
 		down.rotation.z = Math.PI * 0.5;
 	});
 
-	graphics.model_loader.load('3DModels/BuildingV1.js', function(geometry, materials) {
+	graphics.model_loader.load('3DModels/BuildingV7.js', function(geometry, materials) {
 		for (var i = 0; i < 10; i++) {
 			var tree = funcs.add_mesh(geometry, funcs.color_hash(i), materials);
 			tree.position.x = Math.floor(Math.random() * state.size.x);

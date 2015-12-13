@@ -36,7 +36,9 @@ var Game = function(){
 			var client = this.getClientIndexWithWS(ws);
 			var level = this.levels[client.player.currentLevelIndex];
 
-			process.updateGrid(level, client.player, event.dir);
+			var stateUpdate = new webmodels.StateUpdate([]);
+			process.updateGrid(level, client.player, event.dir, stateUpdate);
+			this.sendStateUpdate(stateUpdate);
 
 			console.log("client move event");
 		}
@@ -90,14 +92,18 @@ game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(4,5), game.levels[0
 game.levels[0].grid.cells[numaric.vecToIndex(new models.Vec2(4,4), game.levels[0].grid.size)] = new models.Cell(2,0);
 
 game.levels[0].grid.debug();
-//process.updateGrid(game.levels[0], newPlayer, 1);
-//process.updateGrid(game.levels[0], newPlayer, 0);
-process.updateGrid(game.levels[0], newPlayer, 1);
+var stateUpdate = new webmodels.StateUpdate([]);
+process.updateGrid(game.levels[0], newPlayer, 1, stateUpdate);
 console.log("---------------------------------------");
-game.levels[0].grid.debug();
-process.updateGrid(game.levels[0], newPlayer, 0);
+for (var i = 0; i < stateUpdate.events.length; i++)
+	console.log(stateUpdate.events[i]);
+stateUpdate = new webmodels.StateUpdate([]);
+process.updateGrid(game.levels[0], newPlayer, 0, stateUpdate);
 console.log("---------------------------------------");
-game.levels[0].grid.debug();
-process.updateGrid(game.levels[0], newPlayer, 0);
+for (var i = 0; i < stateUpdate.events.length; i++)
+	console.log(stateUpdate.events[i]);
+process.updateGrid(game.levels[0], newPlayer, 0, stateUpdate);
+stateUpdate = new webmodels.StateUpdate([]);
 console.log("---------------------------------------");
-game.levels[0].grid.debug();
+for (var i = 0; i < stateUpdate.events.length; i++)
+	console.log(stateUpdate.events[i]);
