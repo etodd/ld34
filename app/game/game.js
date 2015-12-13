@@ -121,7 +121,7 @@ var Game = function(){
 	this.handleClientEvent = function(ws, event){
 		var clientIndex = this.getClientIndexWithWS(ws);
 		if (clientIndex != -1){
-			var client = this.clients[this.getClientIndexWithWS(ws)];
+			var client = this.clients[clientIndex];
 			if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
 				var level = this.levels[client.player.currentLevelIndex];
 	
