@@ -5,6 +5,8 @@ var constants = {
 	max_camera_size: 25.0,
 	camera_offset: new THREE.Vector3(),
 	respawn_delay: 3.0,
+	cloud_margin: 7.0,
+	cloud_speed: 0.5,
 	other_player_colors: [
 		0xff0000,
 		0xcc7700,
@@ -55,6 +57,7 @@ var state = {
 
 var graphics = {
 	animations: [],
+	clouds: [],
 	scenery: [],
 	exit_geometry: null,
 	exit_texture: null,
@@ -263,7 +266,7 @@ funcs.color_hash = function(id) {
 	else if (id === 1)
 		return 0x111111;
 	else if (state.player !== null && id === state.player.id)
-		return 0x001188;
+		return 0x002266;
 
 	return constants.other_player_colors[id % constants.other_player_colors.length];
 };
@@ -282,6 +285,33 @@ funcs.init = function(username) {
 };
 
 funcs.done_loading = function() {
+
+	var filenames = [
+		'CloudV1.js',
+		'CloudV2.js',
+		'CloudV3.js',
+		'CloudV4.js',
+		'CloudV5.js',
+		'CloudV6.js',
+		'Cloud7.js',
+		'Cloud8.js',
+		'CloudV9.js',
+	];
+
+	for (var i = 0; i < filenames.length; i++) {
+		var filename = filenames[i];
+
+		graphics.model_loader.load('3DModels/' + filename, function(geometry, materials) {
+			for (var j = 0; j < 2; j++) {
+				var cloud = funcs.add_mesh(geometry, 0xffffff, materials);
+				cloud.position.x = -constants.cloud_margin + Math.random() * 30.0;
+				cloud.position.y = -constants.cloud_margin + Math.random() * 30.0;
+				cloud.position.z = -6.0 + Math.random() * 3.0;
+				graphics.clouds.push(cloud);
+			}
+		});
+	}
+
 	global.clock.start();
 
 	window.addEventListener('resize', funcs.on_resize, false);
@@ -531,30 +561,7 @@ funcs.set_mesh = function(i, value, id) {
 	mesh.position.z = cell_height * 0.5;
 };
 
-funcs.spawn_scenery = function(cell_id, value) {
-	var scenery = funcs.add_mesh(new THREE.BoxGeometry(1, 1, 1), 0x333333);
-	var scenery_pos = funcs.xy(cell_id);
-	scenery.position.x = scenery_pos.x;
-	scenery.position.y = scenery_pos.y;
-	scenery.position.z = 0.5;
-	graphics.scenery.push(scenery);
-	/*
-	var filenames = constants.scenery_filenames[-value];
-	var filename = filenames[Math.floor(Math.random() * filenames.length)];
-
-	var scenery_cell_index = cell_id;
-	graphics.model_loader.load('3DModels/' + filename, function(geometry, materials) {
-		var scenery = funcs.add_mesh(geometry, 0xffffff, materials);
-		var scenery_pos = funcs.xy(scenery_cell_index);
-		scenery.position.x = scenery_pos.x;
-		scenery.position.y = scenery_pos.y;
-		graphics.scenery.push(scenery);
-	});
-	*/
-};
-
 funcs.load_level = function(level) {
-
 	// clear old stuff
 	for (var i = 0; i < graphics.scenery.length; i++)
 		graphics.scene.remove(graphics.scenery[i]);
@@ -584,7 +591,7 @@ funcs.load_level = function(level) {
 
 	graphics.ground.material.map = graphics.texture_loader.load
 	(
-		'test.png',
+		'Level' + level.difficulty + 'B.png',
 		function(texture) {
 			texture.minFilter = texture.magFilter = THREE.NearestFilter;
 			graphics.ground.material.needsUpdate = true;
@@ -620,8 +627,18 @@ funcs.load_level = function(level) {
 				funcs.set_mesh(i, value, state.ids[i]);
 		}
 		else if (value < 0) {
-			if (value === -1)
-				funcs.spawn_scenery(i, value);
+			if (value === -1) {
+				// obstacle
+				var obstacle = funcs.add_mesh(new THREE.BoxGeometry(1, 1, 1), 0x333333);
+				var p = funcs.xy(i);
+				obstacle.position.x = p.x;
+				obstacle.position.y = p.y;
+				obstacle.position.z = 0.5;
+				graphics.scenery.push(obstacle);
+			}
+			else {
+				// this should never ever happen
+			}
 		}
 	}
 
@@ -668,6 +685,19 @@ funcs.animate = function() {
 	requestAnimationFrame(funcs.animate);
 
 	var dt = global.clock.getDelta();
+
+	var cloud_max = new THREE.Vector2(state.size.x + constants.max_camera_size * 0.5, state.size.y + constants.max_camera_size * 0.5);
+	var cloud_speed = constants.cloud_speed * dt;
+	for (var i = 0; i < graphics.clouds.length; i++) {
+		var cloud_pos = graphics.clouds[i].position;
+		cloud_pos.x += cloud_speed;
+		cloud_pos.y += cloud_speed;
+		if (cloud_pos.x > cloud_max.x || cloud_pos.y > cloud_max.y) {
+			cloud_pos.x = (constants.max_camera_size * -0.5) - (Math.random() * (state.size.x + constants.cloud_margin * 2.0));
+			cloud_pos.y = (constants.max_camera_size * -0.5) - (Math.random() * (state.size.y + constants.cloud_margin * 2.0));
+			cloud_pos.z = -6.0 + Math.random() * 3.0;
+		}
+	}
 
 	if (!state.is_alive) {
 		state.respawn_timer += dt;
