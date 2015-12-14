@@ -275,6 +275,15 @@ funcs.color_hash = function(id) {
 	return constants.other_player_colors[id % constants.other_player_colors.length];
 };
 
+funcs.displayText2D = function(text){
+	$("body").append("<div id='text2D' class='text2D'>"+text+"</div>");
+	setTimeout(function(){
+		$(".text2D").fadeOut(4000, function(){
+			$(".text2D").remove();
+		});
+	}, 3000);
+}
+
 funcs.init = function() {
 	global.clock.start();
 
@@ -583,6 +592,7 @@ funcs.set_mesh = function(i, value, id) {
 };
 
 funcs.load_level = function(level) {
+	funcs.displayText2D('Press space to respawn');
 	// clear old stuff
 	for (var i = 0; i < graphics.scenery.length; i++)
 		graphics.scene.remove(graphics.scenery[i]);
