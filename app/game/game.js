@@ -150,10 +150,10 @@ var Game = function(){
 						spawn = false;
 						break;
 					}
-					
-					if (spawn)
-						this.spawnPlayer(level, client.player);
 				}
+					
+				if (spawn)
+					this.spawnPlayer(level, client.player);
 
 			} else if (event.type == webmodels.ClientEvent.TYPE_RELOAD){
 				var time = new Date().getTime();
