@@ -7,8 +7,8 @@ var constants = {
 	respawn_delay: 3.0,
 	cloud_margin: 7.0,
 	cloud_speed: 0.5,
-	logo_time: 3,
 	logo_anim_time: 1,
+	logo_timer_active: false,
 	other_player_colors: [
 		0xff0000,
 		0xcc7700,
@@ -339,9 +339,10 @@ funcs.init = function() {
 		);
 	});
 
-	graphics.model_loader.load('3DModels/TileRisersV2.js', function(geometry, materials) {
+	graphics.model_loader.load('3DModels/TileRisersV7.js', function(geometry, materials) {
 		geometry.computeBoundingBox();
 		graphics.logo = funcs.add_mesh(geometry, 0xffffff, materials);
+		graphics.logo.scale.set(0.75, 0.75, 0.75);
 		graphics.scene.add(graphics.logo);
 	});
 };
@@ -514,6 +515,7 @@ funcs.error = function(e) {
 };
 
 funcs.move = function(dir) {
+	graphics.logo_timer_active = true;
 	funcs.ws_send({ type: 'moveEvent', dir: dir });
 };
 
@@ -757,17 +759,12 @@ funcs.animate = function() {
 	}
 
 	if (graphics.logo !== null) {
-		graphics.logo_timer += dt;
+		if (graphics.logo_timer_active)
+			graphics.logo_timer += dt;
 
-		if (graphics.logo_timer < constants.logo_time + constants.logo_anim_time) {
-			var height;
-			if (graphics.logo_timer < constants.logo_time)
-				height = 1;
-			else {
-				var t = graphics.logo_timer - constants.logo_time;
-				height = 1 + constants.max_camera_size * 2.0 * Math.pow(2, 10 * ((t / constants.logo_anim_time) - 1));
-			}
-			graphics.logo.position.set(graphics.camera_pos.x + graphics.logo.geometry.boundingBox.max.x * -0.5, graphics.camera_pos.y, height);
+		if (graphics.logo_timer < constants.logo_anim_time) {
+			var height = 1 + constants.max_camera_size * 2.0 * Math.pow(2, 10 * ((graphics.logo_timer / constants.logo_anim_time) - 1));
+			graphics.logo.position.set(graphics.camera_pos.x + (graphics.logo.scale.x * graphics.logo.geometry.boundingBox.max.x * -0.5), graphics.camera_pos.y + 0.5, height);
 		}
 		else {
 			graphics.scene.remove(graphics.logo);
