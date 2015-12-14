@@ -7,6 +7,8 @@ var constants = {
 	respawn_delay: 3.0,
 	cloud_margin: 7.0,
 	cloud_speed: 0.5,
+	logo_time: 3,
+	logo_anim_time: 1,
 	other_player_colors: [
 		0xff0000,
 		0xcc7700,
@@ -55,6 +57,8 @@ var state = {
 };
 
 var graphics = {
+	logo: null,
+	logo_timer: 0,
 	animations: [],
 	clouds: [],
 	scenery: [],
@@ -272,53 +276,6 @@ funcs.color_hash = function(id) {
 };
 
 funcs.init = function() {
-	graphics.model_loader.load('3DModels/exit.js', function(geometry, materials) {
-		graphics.exit_geometry = geometry;
-		graphics.exit_texture = graphics.texture_loader.load
-		(
-			'3DModels/exit.png',
-			funcs.done_loading,
-			funcs.error
-		);
-	});
-};
-
-funcs.done_loading = function() {
-	graphics.model_loader.load('3DModels/spinner.js', function(geometry, materials) {
-		graphics.spinner = funcs.add_mesh(geometry, 0xffffff);
-		graphics.spinner.rotation.copy(graphics.camera.rotation);
-		graphics.spinner.visible = false;
-		graphics.scene.add(graphics.spinner);
-		graphics.spinner.castShadow = false;
-		graphics.spinner.receiveShadow = false;
-	});
-
-	var filenames = [
-		'CloudV1.js',
-		'CloudV2.js',
-		'CloudV3.js',
-		'CloudV4.js',
-		'CloudV5.js',
-		'CloudV6.js',
-		'Cloud7.js',
-		'Cloud8.js',
-		'CloudV9.js',
-	];
-
-	for (var i = 0; i < filenames.length; i++) {
-		var filename = filenames[i];
-
-		graphics.model_loader.load('3DModels/' + filename, function(geometry, materials) {
-			for (var j = 0; j < 2; j++) {
-				var cloud = funcs.add_mesh(geometry, 0xffffff, materials);
-				cloud.position.x = -constants.cloud_margin + Math.random() * 30.0;
-				cloud.position.y = -constants.cloud_margin + Math.random() * 30.0;
-				cloud.position.z = -6.0 + Math.random() * 3.0;
-				graphics.clouds.push(cloud);
-			}
-		});
-	}
-
 	global.clock.start();
 
 	window.addEventListener('resize', funcs.on_resize, false);
@@ -379,6 +336,59 @@ funcs.done_loading = function() {
 	document.body.appendChild(graphics.renderer.domElement);
 
 	funcs.on_resize();
+
+	graphics.model_loader.load('3DModels/exit.js', function(geometry, materials) {
+		graphics.exit_geometry = geometry;
+		graphics.exit_texture = graphics.texture_loader.load
+		(
+			'3DModels/exit.png',
+			funcs.done_loading,
+			funcs.error
+		);
+	});
+
+	graphics.model_loader.load('3DModels/TileRisers.js', function(geometry, materials) {
+		geometry.computeBoundingBox();
+		graphics.logo = funcs.add_mesh(geometry, 0xffffff, materials);
+		graphics.scene.add(graphics.logo);
+	});
+};
+
+funcs.done_loading = function() {
+	graphics.model_loader.load('3DModels/spinner.js', function(geometry, materials) {
+		graphics.spinner = funcs.add_mesh(geometry, 0xffffff);
+		graphics.spinner.rotation.copy(graphics.camera.rotation);
+		graphics.spinner.visible = false;
+		graphics.scene.add(graphics.spinner);
+		graphics.spinner.castShadow = false;
+		graphics.spinner.receiveShadow = false;
+	});
+
+	var clouds = [
+		'CloudV1.js',
+		'CloudV2.js',
+		'CloudV3.js',
+		'CloudV4.js',
+		'CloudV5.js',
+		'CloudV6.js',
+		'Cloud7.js',
+		'Cloud8.js',
+		'CloudV9.js',
+	];
+
+	for (var i = 0; i < clouds.length; i++) {
+		var filename = clouds[i];
+
+		graphics.model_loader.load('3DModels/' + filename, function(geometry, materials) {
+			for (var j = 0; j < 2; j++) {
+				var cloud = funcs.add_mesh(geometry, 0xffffff, materials);
+				cloud.position.x = -constants.cloud_margin + Math.random() * 30.0;
+				cloud.position.y = -constants.cloud_margin + Math.random() * 30.0;
+				cloud.position.z = -6.0 + Math.random() * 3.0;
+				graphics.clouds.push(cloud);
+			}
+		});
+	}
 
 	$(window).on('resize', funcs.on_resize);
 
@@ -750,6 +760,25 @@ funcs.animate = function() {
 			r.multiply(camera_rot);
 			graphics.spinner.rotation.setFromQuaternion(r);
 			graphics.spinner.position.set(graphics.camera_pos.x, graphics.camera_pos.y, 2);
+		}
+	}
+
+	if (graphics.logo !== null) {
+		graphics.logo_timer += dt;
+
+		if (graphics.logo_timer < constants.logo_time + constants.logo_anim_time) {
+			var height;
+			if (graphics.logo_timer < constants.logo_time)
+				height = 1;
+			else {
+				var t = graphics.logo_timer - constants.logo_time;
+				height = 1 + constants.max_camera_size * 2.0 * Math.pow(2, 10 * ((t / constants.logo_anim_time) - 1));
+			}
+			graphics.logo.position.set(graphics.camera_pos.x + graphics.logo.geometry.boundingBox.max.x * -0.5, graphics.camera_pos.y, height);
+		}
+		else {
+			graphics.scene.remove(graphics.logo);
+			graphics.logo = null;
 		}
 	}
 	graphics.camera.position.set(graphics.camera_pos.x, graphics.camera_pos.y, 0).add(constants.camera_offset);
