@@ -424,6 +424,10 @@ funcs.on_keyup = function(event) {
 			global.key_right = false;
 			event.preventDefault();
 			break;
+		case 32://space
+			event.preventDefault();
+			funcs.ws_send({type: "reload"});
+			break;
 	}
 };
 

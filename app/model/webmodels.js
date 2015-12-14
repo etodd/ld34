@@ -15,6 +15,7 @@ const TYPE_INIT_STATE = "initState";
 const TYPE_STATE_UPDATE = "stateUpdate";
 const TYPE_SET_USERNAME = "setUsername";
 const TYPE_RESPAWN = "respawn";
+const TYPE_RELOAD = "reload";
 
 var ClientEvent = function(type, dir){
 	this.type = type;
@@ -24,6 +25,7 @@ exports.ClientEvent = ClientEvent;
 exports.ClientEvent.TYPE_MOVE_EVENT = TYPE_MOVE_EVENT;
 exports.ClientEvent.TYPE_SET_USERNAME = TYPE_SET_USERNAME;
 exports.ClientEvent.TYPE_RESPAWN = TYPE_RESPAWN;
+exports.ClientEvent.TYPE_RELOAD = TYPE_RELOAD;
 
 var Event = function(cellId, dir, playerId, value){
 	this.cellId = cellId;
