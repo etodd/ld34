@@ -271,7 +271,17 @@ funcs.color_hash = function(id) {
 	return constants.other_player_colors[id % constants.other_player_colors.length];
 };
 
+funcs.displayText2D = function(text){
+	$("body").append("<div id='text2D' class='text2D'>"+text+"</div>");
+	setTimeout(function(){
+		$(".text2D").fadeOut(4000, function(){
+			$(".text2D").remove();
+		});
+	}, 3000);
+}
+
 funcs.init = function() {
+	funcs.displayText2D("Press Space to Respawn");
 	graphics.model_loader.load('3DModels/exit.js', function(geometry, materials) {
 		graphics.exit_geometry = geometry;
 		graphics.exit_texture = graphics.texture_loader.load
