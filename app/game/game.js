@@ -41,7 +41,7 @@ var Game = function(){
 		return new webmodels.State(level, client.player);
 	}
 
-	this.spawnPlayer = function(level, player) {
+	this.spawnPlayer = function(level, player, stateUpdate) {
 		// find a spawn point
 		var spawnPoint = null;
 		var p = new models.Vec2(0, 0);
@@ -78,7 +78,9 @@ var Game = function(){
 			spawnPoint = new models.Vec2(0, 0);
 
 		// spawn a block
-		var stateUpdate = new webmodels.StateUpdate(player.currentLevelIndex, []);
+		if (!stateUpdate){
+			stateUpdate = new webmodels.StateUpdate(player.currentLevelIndex, []);
+		}
 
 		process.set(level, spawnPoint, new models.Cell(player.highestValue, player.id), stateUpdate);
 		process.assimilateAdjacents(spawnPoint, level.grid, player, spawnPoint, stateUpdate);
@@ -152,6 +154,14 @@ var Game = function(){
 					if (spawn)
 						this.spawnPlayer(level, client.player);
 				}
+
+			} else if (event.type == webmodels.ClientEvent.TYPE_RELOAD){
+				var levelId = client.player.currentLevelIndex;
+				var level = this.levels[client.player.currentLevelIndex];
+
+				var stateUpdate = new webmodels.StateUpdate(levelId, []);
+				this.deactivatePlayer(client.player, stateUpdate);
+				this.spawnPlayer(level, client.player, stateUpdate);
 			}
 		}
 	}
