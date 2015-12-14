@@ -20,25 +20,6 @@ var constants = {
 		0xaa1100,
 		0xcc0000,
 	],
-	scenery_filenames: [
-		null,
-		['StairsV2.js'],
-		[
-			'BuildingV1.js',
-			'BuildingV2.js',
-			'BuildingV3.js',
-			'BuildingV4.js',
-			'BuildingV5.js',
-			'BuildingV6.js',
-			'BuildingV7.js',
-			'BuildingV8.js',
-			'BuildingV9.js',
-		],
-		['FencePostV1.js', 'FenceWallV1.js'],
-		['RockV3.js'],
-		['TreeV4.js', 'TreeV5.js'],
-		['CylinderV2.js'],
-	],
 	directions: {
 		down: 0,
 		left: 1,
@@ -276,10 +257,12 @@ funcs.color_hash = function(id) {
 };
 
 funcs.displayText2D = function(text){
-	$("body").append("<div id='text2D' class='text2D'>"+text+"</div>");
+	$("#text2D").remove();
+	var $text = $("<div id='text2D' class='text2D'>"+text+"</div>");
+	$("body").append($text);
 	setTimeout(function(){
-		$(".text2D").fadeOut(4000, function(){
-			$(".text2D").remove();
+		$text.fadeOut(3000, function(){
+			$text.remove();
 		});
 	}, 3000);
 }
@@ -356,7 +339,7 @@ funcs.init = function() {
 		);
 	});
 
-	graphics.model_loader.load('3DModels/TileRisers.js', function(geometry, materials) {
+	graphics.model_loader.load('3DModels/TileRisersV2.js', function(geometry, materials) {
 		geometry.computeBoundingBox();
 		graphics.logo = funcs.add_mesh(geometry, 0xffffff, materials);
 		graphics.scene.add(graphics.logo);
@@ -592,7 +575,7 @@ funcs.set_mesh = function(i, value, id) {
 };
 
 funcs.load_level = function(level) {
-	funcs.displayText2D('Press space to respawn');
+	funcs.displayText2D('[Space] to respawn');
 	// clear old stuff
 	for (var i = 0; i < graphics.scenery.length; i++)
 		graphics.scene.remove(graphics.scenery[i]);

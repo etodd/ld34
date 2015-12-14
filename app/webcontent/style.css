@@ -20,7 +20,7 @@ html, body, canvas
     text-shadow: 1px 1px #000000;
     width: 50%;
     min-width: 300px;
-    top: 10%;
+    bottom: 10%;
 
     border-radius: 6px;
     text-align: center;
