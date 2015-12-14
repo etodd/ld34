@@ -59,6 +59,7 @@ var graphics = {
 	clouds: [],
 	scenery: [],
 	exit_geometry: null,
+	spinner: null,
 	exit_texture: null,
 	texture_loader: new THREE.TextureLoader(),
 	model_loader: new THREE.JSONLoader(),
@@ -283,6 +284,14 @@ funcs.init = function() {
 };
 
 funcs.done_loading = function() {
+	graphics.model_loader.load('3DModels/spinner.js', function(geometry, materials) {
+		graphics.spinner = funcs.add_mesh(geometry, 0xffffff);
+		graphics.spinner.rotation.copy(graphics.camera.rotation);
+		graphics.spinner.visible = false;
+		graphics.scene.add(graphics.spinner);
+		graphics.spinner.castShadow = false;
+		graphics.spinner.receiveShadow = false;
+	});
 
 	var filenames = [
 		'CloudV1.js',
@@ -729,6 +738,20 @@ funcs.animate = function() {
 		? Math.min(graphics.camera_size_target, graphics.camera_size + dt * 10.0)
 		: Math.max(graphics.camera_size_target, graphics.camera_size - dt * 10.0);
 
+
+	if (graphics.spinner !== null) {
+		graphics.spinner.visible = global.ws === null || global.ws.readyState !== 1;
+		if (graphics.spinner.visible) {
+			var camera_rot = new THREE.Quaternion();
+			camera_rot.setFromEuler(graphics.camera.rotation);
+			var forward = graphics.camera.getWorldDirection(new THREE.Vector3(0, 0, 1));
+			var r = new THREE.Quaternion();
+			r.setFromAxisAngle(forward, global.clock.getElapsedTime() * 5.0);
+			r.multiply(camera_rot);
+			graphics.spinner.rotation.setFromQuaternion(r);
+			graphics.spinner.position.set(graphics.camera_pos.x, graphics.camera_pos.y, 2);
+		}
+	}
 	graphics.camera.position.set(graphics.camera_pos.x, graphics.camera_pos.y, 0).add(constants.camera_offset);
 
 	funcs.update_projection();
