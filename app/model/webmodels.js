@@ -3,6 +3,7 @@ var models = require("./models.js");
 var Client = function(ws, player){
 	this.ws = ws;
 	this.player = player;
+	this.lastRespawn = 0;
 }
 exports.Client = Client;
 

@@ -156,12 +156,20 @@ var Game = function(){
 				}
 
 			} else if (event.type == webmodels.ClientEvent.TYPE_RELOAD){
-				var levelId = client.player.currentLevelIndex;
-				var level = this.levels[client.player.currentLevelIndex];
+				var time = new Date().getTime();
+				console.log(client.lastRespawn);
+				console.log(time);
+				if (client.lastRespawn + 30000 <= time){
+					client.lastRespawn = time;
 
-				var stateUpdate = new webmodels.StateUpdate(levelId, []);
-				this.deactivatePlayer(client.player, stateUpdate);
-				this.spawnPlayer(level, client.player, stateUpdate);
+					var levelId = client.player.currentLevelIndex;
+					var level = this.levels[client.player.currentLevelIndex];
+					client.player.highestValue = 1;
+
+					var stateUpdate = new webmodels.StateUpdate(levelId, []);
+					this.deactivatePlayer(client.player, stateUpdate);
+					this.spawnPlayer(level, client.player, stateUpdate);
+				}
 			}
 		}
 	}
