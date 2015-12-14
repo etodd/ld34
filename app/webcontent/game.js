@@ -385,8 +385,8 @@ funcs.done_loading = function() {
 
 	$(window).on('resize', funcs.on_resize);
 
-	$(document).on('keydown', funcs.on_keydown);
-	$(document).on('keyup', funcs.on_keyup);
+	$(window.parent || window).on('keydown', funcs.on_keydown);
+	$(window.parent || window).on('keyup', funcs.on_keyup);
 
 	$(document).on('mousedown', funcs.on_mousedown);
 	$(document).on('mousemove', funcs.on_mousemove);
