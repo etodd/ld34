@@ -20,9 +20,8 @@ var Game = function(){
 		var client = new webmodels.Client(ws, newPlayer);
 
 		var levelIndex = this.findCompatibleLevel_withDifficulty(0);
-		console.log("Loading level " + levelIndex);
 		if (levelIndex == -1){
-			console.log("no more levels with that difficulty");
+			client.ws.close();
 			return;
 		} else {
 			var initState = this.clientEnterLevel(client, levelIndex);
@@ -36,7 +35,9 @@ var Game = function(){
 		client.player.currentLevelIndex = levelId;
 		var level = this.levels[levelId];
 
-		this.spawnPlayer(level, client.player);
+		var stateUpdate = new webmodels.StateUpdate(levelId, []);
+		this.spawnPlayer(level, client.player, stateUpdate);
+		this.sendStateUpdate(stateUpdate);
 
 		return new webmodels.State(level, client.player);
 	}
@@ -78,13 +79,8 @@ var Game = function(){
 			spawnPoint = new models.Vec2(0, 0);
 
 		// spawn a block
-		if (!stateUpdate){
-			stateUpdate = new webmodels.StateUpdate(player.currentLevelIndex, []);
-		}
-
 		process.set(level, spawnPoint, new models.Cell(player.highestValue, player.id), stateUpdate);
 		process.assimilateAdjacents(spawnPoint, level.grid, player, spawnPoint, stateUpdate);
-		this.sendStateUpdate(stateUpdate);
 	}
 
 	this.handleClientClose = function(ws){
@@ -152,8 +148,11 @@ var Game = function(){
 					}
 				}
 					
-				if (spawn)
-					this.spawnPlayer(level, client.player);
+				if (spawn) {
+					var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
+					this.spawnPlayer(level, client.player, stateUpdate);
+					this.sendStateUpdate(stateUpdate);
+				}
 
 			} else if (event.type == webmodels.ClientEvent.TYPE_RELOAD){
 				var time = new Date().getTime();
@@ -167,6 +166,7 @@ var Game = function(){
 					var stateUpdate = new webmodels.StateUpdate(levelId, []);
 					this.deactivatePlayer(client.player, stateUpdate);
 					this.spawnPlayer(level, client.player, stateUpdate);
+					this.sendStateUpdate(stateUpdate);
 				}
 			}
 		}

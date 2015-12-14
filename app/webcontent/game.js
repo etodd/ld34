@@ -159,6 +159,15 @@ funcs.ws_on_message = function(msg)
 	else if (msg.type === 'stateUpdate') {
 		for (var i = 0; i < msg.events.length; i++) {
 			var event = msg.events[i];
+
+			for (var j = 0; j < graphics.animations.length; j++) {
+				if (graphics.animations[j].new_cell === event.cellId) {
+					funcs.complete_animation(graphics.animations[j]);
+					graphics.animations.splice(j, 1);
+					j--;
+				}
+			}
+
 			if (event.value === 0) {
 				// Kill whatever's there
 				state.values[event.cellId] = event.value;
@@ -193,14 +202,6 @@ funcs.ws_on_message = function(msg)
 
 					state.values[nextCellId] = event.value;
 					state.ids[nextCellId] = event.playerId;
-
-					for (var j = 0; j < graphics.animations.length; j++) {
-						if (graphics.animations[j].new_cell === event.cellId) {
-							funcs.complete_animation(graphics.animations[j]);
-							graphics.animations.splice(j, 1);
-							j--;
-						}
-					}
 
 					var mesh = graphics.meshes[event.cellId];
 					var remove_mesh = graphics.meshes[nextCellId];
