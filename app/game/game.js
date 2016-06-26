@@ -1,5 +1,4 @@
-var models = require("../model/models.js");
-var webmodels = require("../model/webmodels.js");
+var Models = require("../model/Models.js");
 var process = require("./process.js");
 var numaric = require("../utils/numaric.js");
 var ws = require('ws');
@@ -15,9 +14,9 @@ var Game = function(){
 	});
 
 	this.handleClientConnect = function(ws) {
-		var newPlayer = new models.Player().new(this.clientIdCounter);
+		var newPlayer = new Models.Player().new(this.clientIdCounter);
 		this.clientIdCounter++;
-		var client = new webmodels.Client(ws, newPlayer);
+		var client = new Models.Client(ws, newPlayer);
 
 		var levelIndex = this.findCompatibleLevel_withDifficulty(0);
 		if (levelIndex == -1){
@@ -36,17 +35,17 @@ var Game = function(){
 		client.player.currentLevelIndex = levelId;
 		var level = this.levels[levelId];
 
-		var stateUpdate = new webmodels.StateUpdate(levelId, []);
+		var stateUpdate = new Models.StateUpdate(levelId, []);
 		this.spawnPlayer(level, client.player, stateUpdate);
 		this.sendStateUpdate(stateUpdate);
 
-		return new webmodels.State(level, client.player);
+		return new Models.State(level, client.player);
 	}
 
 	this.spawnPlayer = function(level, player, stateUpdate) {
 		// find a spawn point
 		var spawnPoint = null;
-		var p = new models.Vec2(0, 0);
+		var p = new Models.Vec2(0, 0);
 		for (var i = 0; i < level.grid.cells.length; i++) {
 			var candidateId = Math.floor(Math.random() * level.grid.cells.length);
 			var candidate = numaric.indexToVec(candidateId, level.grid.size);
@@ -77,17 +76,17 @@ var Game = function(){
 		}
 
 		if (spawnPoint === null) // this should never ever happen
-			spawnPoint = new models.Vec2(0, 0);
+			spawnPoint = new Models.Vec2(0, 0);
 
 		// spawn a block
-		process.set(level, spawnPoint, new models.Cell(player.highestValue, player.id), stateUpdate);
+		process.set(level, spawnPoint, new Models.Cell(player.highestValue, player.id), stateUpdate);
 		process.assimilateAdjacents(spawnPoint, level.grid, player, spawnPoint, stateUpdate);
 	}
 
 	this.handleClientClose = function(ws){
 		if (ws.client){
 			var client = ws.client;
-			var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
+			var stateUpdate = new Models.StateUpdate(client.player.currentLevelIndex, []);
 			this.deactivatePlayer(client.player, stateUpdate);
 			this.removeClientWithWS(ws);
 			this.sendStateUpdate(stateUpdate);
@@ -99,7 +98,7 @@ var Game = function(){
 		var stats = level.grid.stats();
 		if (stats.filled > stats.totalPlayable * 0.2) {
 			// too crowded. delete the cells
-			var empty = new models.Cell(0, 0);
+			var empty = new Models.Cell(0, 0);
 			for (var i = 0; i < level.grid.cells.length; i++) {
 				var cell = level.grid.cells[i];
 				if (cell.playerId === player.id && cell.value > 0) // delete the cell
@@ -111,7 +110,7 @@ var Game = function(){
 			for (var i = 0; i < level.grid.cells.length; i++) {
 				var cell = level.grid.cells[i];
 				if (cell.playerId === player.id && cell.value > 0) // set the cell as dead
-					process.set(level, numaric.indexToVec(i, level.grid.size), new models.Cell(cell.value, 1), stateUpdate);
+					process.set(level, numaric.indexToVec(i, level.grid.size), new Models.Cell(cell.value, 1), stateUpdate);
 			}
 		}
 	};
@@ -119,10 +118,10 @@ var Game = function(){
 	this.handleClientEvent = function(ws, event){
 		if (ws.client){
 			var client = ws.client;
-			if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
+			if (event.type == Models.ClientEvent.TYPE_MOVE_EVENT){
 				var level = this.levels[client.player.currentLevelIndex];
 	
-				var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
+				var stateUpdate = new Models.StateUpdate(client.player.currentLevelIndex, []);
 				process.move(level, client.player, event.dir, stateUpdate);
 				if (client.player.nextLevel !== null) {
 					var levelIndex = this.findCompatibleLevel_withDifficulty(client.player.nextLevel);
@@ -135,7 +134,7 @@ var Game = function(){
 				}
 				this.sendStateUpdate(stateUpdate);
 
-			} else if (event.type == webmodels.ClientEvent.TYPE_RESPAWN){
+			} else if (event.type == Models.ClientEvent.TYPE_RESPAWN){
 				var level = this.levels[client.player.currentLevelIndex];
 	
 				// first, make sure the player has no cells, so we know it's safe to spawn
@@ -148,12 +147,12 @@ var Game = function(){
 				}
 					
 				if (spawn) {
-					var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
+					var stateUpdate = new Models.StateUpdate(client.player.currentLevelIndex, []);
 					this.spawnPlayer(level, client.player, stateUpdate);
 					this.sendStateUpdate(stateUpdate);
 				}
 
-			} else if (event.type == webmodels.ClientEvent.TYPE_RELOAD){
+			} else if (event.type == Models.ClientEvent.TYPE_RELOAD){
 				var time = new Date().getTime();
 				if (client.lastRespawn + 30000 <= time){
 					client.lastRespawn = time;
@@ -162,7 +161,7 @@ var Game = function(){
 					var level = this.levels[client.player.currentLevelIndex];
 					client.player.highestValue = 1;
 
-					var stateUpdate = new webmodels.StateUpdate(levelId, []);
+					var stateUpdate = new Models.StateUpdate(levelId, []);
 					this.deactivatePlayer(client.player, stateUpdate);
 					this.spawnPlayer(level, client.player, stateUpdate);
 					this.sendStateUpdate(stateUpdate);
@@ -199,7 +198,7 @@ var Game = function(){
 		if (typeof count === 'undefined')
 			count = 2;
 		for (var i = 0; i < this.levels.length; ++i){
-			var stateUpdate = new webmodels.StateUpdate(i, []);
+			var stateUpdate = new Models.StateUpdate(i, []);
 			var level = this.levels[i];
 			var grid = level.grid;
 			var stats = grid.stats();
@@ -232,7 +231,7 @@ var Game = function(){
 				}
 
 				if (canSpawn)
-					process.set(level, cellPos, new models.Cell(1, 0), stateUpdate);
+					process.set(level, cellPos, new Models.Cell(1, 0), stateUpdate);
 				else {
 					tries++;
 					if (tries > 10)

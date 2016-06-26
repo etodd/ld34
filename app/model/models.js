@@ -125,3 +125,56 @@ Level.prototype.debug = function(){
 	this.grid.debug();
 }
 exports.Level = Level;
+
+
+
+var Client = function(ws, player){
+	this.ws = ws;
+	this.player = player;
+	this.lastRespawn = 0;
+}
+exports.Client = Client;
+
+
+
+var ClientEvent = function(type, dir){
+	this.type = type;
+	this.dir = dir;
+}
+exports.ClientEvent = ClientEvent;
+exports.ClientEvent.TYPE_MOVE_EVENT = "moveEvent";
+exports.ClientEvent.TYPE_SET_USERNAME = "setUsername";
+exports.ClientEvent.TYPE_RESPAWN = "respawn";
+exports.ClientEvent.TYPE_RELOAD = "reload";
+
+
+
+var Event = function(cellId, dir, playerId, value){
+	this.cellId = cellId;
+	this.dir = dir;
+	this.playerId = playerId;
+	this.value = value;
+}
+exports.Event = Event;
+
+
+
+const TYPE_STATE_UPDATE = "stateUpdate";
+var StateUpdate = function(level_id, events){
+	this.level_id = level_id;
+	this.type = TYPE_STATE_UPDATE;
+	this.events = events;
+}
+exports.StateUpdate = StateUpdate;
+exports.StateUpdate.TYPE_STATE_UPDATE = TYPE_STATE_UPDATE;
+
+
+
+const TYPE_INIT_STATE = "initState";
+var State = function(level, player){
+	this.type = TYPE_INIT_STATE;
+	this.level = level;
+	this.player = player;
+}
+exports.State = State;
+exports.State.TYPE_INIT_STATE = TYPE_INIT_STATE;

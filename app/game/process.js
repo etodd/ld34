@@ -1,14 +1,13 @@
-var models = require("../model/models.js");
-var webmodels = require("../model/webmodels.js");
+var Models = require("../model/Models.js");
 var numaric = require("../utils/numaric.js");
 var deepcopy = require('deepcopy');
 var imgLoader = require("../utils/imageLoader.js");
 
 var generateGrid = function(size){
-	var grid = new models.Grid([], size);
+	var grid = new Models.Grid([], size);
 	for (var x = 0; x < size.x; ++x){
 		for (var y = 0; y < size.y; ++y){
-			var cell = new models.Cell(0, models.Cell.NULL_PLAYER_ID);
+			var cell = new Models.Cell(0, Models.Cell.NULL_PLAYER_ID);
 			grid.cells.push(cell);
 		}
 	}
@@ -56,7 +55,7 @@ exports.loadLevels = loadLevels;
 
 var loadLevelFromDisk = function(levelData, output, callback){
 	imgLoader.loadImage(levelData.filename, function(img){
-		var grid = new models.Grid(new Array(img.width * img.height), new models.Vec2(img.width, img.height));
+		var grid = new Models.Grid(new Array(img.width * img.height), new Models.Vec2(img.width, img.height));
 
 		for (var i = 0; i < img.data.length; i++){
 			var p = numaric.indexToVec(i, grid.size);
@@ -66,18 +65,18 @@ var loadLevelFromDisk = function(levelData, output, callback){
 			var pixel = img.data[i];
 			if (pixel.a === 0) {
 				// empty
-				grid.cells[newIndex] = new models.Cell(0, 0);
+				grid.cells[newIndex] = new Models.Cell(0, 0);
 			} else if (pixel.r === 255 && pixel.g === 255 && pixel.b === 255) {
 				// obstacle
-				grid.cells[newIndex] = new models.Cell(-1, 0);
+				grid.cells[newIndex] = new Models.Cell(-1, 0);
 			} else {
 				// exit
 				// r = threshold value required to use the exit
 				// g = level difficulty index to teleport to
-				grid.cells[newIndex] = new models.Cell(pixel.r, -pixel.g);
+				grid.cells[newIndex] = new Models.Cell(pixel.r, -pixel.g);
 			}
 		}
-		output.push(new models.Level().new(grid, levelData.difficulty, levelData.maxPlayers));
+		output.push(new Models.Level().new(grid, levelData.difficulty, levelData.maxPlayers));
 		callback();
 	});
 }
@@ -88,14 +87,14 @@ var set = function(level, cellPos, cell, stateUpdate){
 	if (oldCell.value !== cell.value || oldCell.playerId !== cell.playerId) {
 		oldCell.playerId = cell.playerId;
 		oldCell.value = cell.value;
-		stateUpdate.events.push(new webmodels.Event(cellId, -1, cell.playerId, cell.value));
+		stateUpdate.events.push(new Models.Event(cellId, -1, cell.playerId, cell.value));
 	}
 }
 exports.set = set;
 
 var move = function(level, player, dir, stateUpdate){
 	var count = 0;
-	var center = new models.Vec2();
+	var center = new Models.Vec2();
 	for (var i = 0; i < level.grid.cells.length; i++) {
 		if (level.grid.cells[i].playerId === player.id) {
 			var p = numaric.indexToVec(i, level.grid.size);
@@ -117,7 +116,7 @@ var move = function(level, player, dir, stateUpdate){
 	var v_dir = getPerpendicular(u_dir);
 	for (var u = 0; u < Math.abs(level.grid.size.get(getPositiveDir(u_dir), level.grid.size)); ++u){
 		for (var v = 0; v < Math.abs(level.grid.size.get(getPositiveDir(v_dir), level.grid.size)); ++v){
-			var p = new models.Vec2();
+			var p = new Models.Vec2();
 			p.set(u_dir, level.grid.size, u);
 			p.set(v_dir, level.grid.size, v);
 			updateCell(p, player, level.grid, dir, center, stateUpdate);
@@ -142,7 +141,7 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 			// check if we need to deactivate this cell
 			if (!isWithinRange(center, cellPos)) {
 				grid.cells[cellId].playerId = 0;
-				stateUpdate.events.push(new webmodels.Event(cellId, -1, 0, grid.cells[cellId].value));
+				stateUpdate.events.push(new Models.Event(cellId, -1, 0, grid.cells[cellId].value));
 			}
 		}
 		else{
@@ -161,7 +160,7 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 				grid.cells[cellId].value = 0;
 				grid.cells[cellId].playerId = 0;
 
-				stateUpdate.events.push(new webmodels.Event(cellId, dir, newPlayerId, newValue));
+				stateUpdate.events.push(new Models.Event(cellId, dir, newPlayerId, newValue));
 
 				if (withinRange)
 					assimilateAdjacents(nextCellPos, grid, player, center, stateUpdate);
@@ -183,7 +182,7 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 						grid.cells[nextCellId].playerId = newPlayerId;
 						grid.cells[cellId].value = 0;
 						grid.cells[cellId].playerId = 0;
-						stateUpdate.events.push(new webmodels.Event(cellId, dir, newPlayerId, newValue));
+						stateUpdate.events.push(new Models.Event(cellId, dir, newPlayerId, newValue));
 
 						if (withinRange)
 							assimilateAdjacents(nextCellPos, grid, player, center, stateUpdate);
@@ -194,7 +193,7 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 					// check if we need to deactivate this cell
 					if (!isWithinRange(center, cellPos)) {
 						grid.cells[cellId].playerId = 0;
-						stateUpdate.events.push(new webmodels.Event(cellId, -1, 0, grid.cells[cellId].value));
+						stateUpdate.events.push(new Models.Event(cellId, -1, 0, grid.cells[cellId].value));
 					}
 				}
 			}
@@ -214,7 +213,7 @@ var assimilateAdjacents = function(cellPos, grid, player, center, stateUpdate) {
 				// pick up adjacent cell
 				player.highestValue = Math.max(player.highestValue, adjacentValue);
 				grid.cells[adjacentId].playerId = player.id;
-				stateUpdate.events.push(new webmodels.Event(adjacentId, -1, player.id, adjacentValue));
+				stateUpdate.events.push(new Models.Event(adjacentId, -1, player.id, adjacentValue));
 			}
 		}
 	}
@@ -222,10 +221,10 @@ var assimilateAdjacents = function(cellPos, grid, player, center, stateUpdate) {
 exports.assimilateAdjacents = assimilateAdjacents;
 
 var directions = [];
-directions.push(new models.Vec2(0,-1));
-directions.push(new models.Vec2(-1,0));
-directions.push(new models.Vec2(0,1));
-directions.push(new models.Vec2(1,0));
+directions.push(new Models.Vec2(0,-1));
+directions.push(new Models.Vec2(-1,0));
+directions.push(new Models.Vec2(0,1));
+directions.push(new Models.Vec2(1,0));
 exports.directions = directions;
 var getDirectionEnum = function(dir){
 	return directions[dir];
