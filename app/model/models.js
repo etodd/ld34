@@ -1,6 +1,8 @@
 var uuid = require('uuid');
 var numaric = require('../utils/numaric.js');
 
+
+
 var Vec2 = function(x, y){
 	if (typeof x === 'undefined')
 		this.x = this.y = 0;
@@ -13,11 +15,9 @@ exports.Vec2 = Vec2;
 Vec2.prototype.debug = function(){
 	console.log("("+this.x+", "+this.y+")");
 }
-
 Vec2.prototype.add = function(vec){
 	return new Vec2(this.x+vec.x, this.y+vec.y);
 }
-
 Vec2.prototype.get = function(dir, size){
 	switch (dir){
 		case 0:
@@ -29,8 +29,7 @@ Vec2.prototype.get = function(dir, size){
 		case 3:
 			return this.x;
 	}
-};
-
+}
 Vec2.prototype.set = function(dir, size, value){
 	switch (dir){
 		case 0:
@@ -46,7 +45,9 @@ Vec2.prototype.set = function(dir, size, value){
 			this.x = value;
 			break;
 	}
-};
+}
+
+
 
 const NULL_PLAYER_ID = 0;
 var Cell = function(value, playerId){
@@ -58,6 +59,8 @@ Cell.prototype.debug = function(){
 }
 exports.Cell = Cell;
 exports.Cell.NULL_PLAYER_ID = NULL_PLAYER_ID;
+
+
 
 var Player = function(){
 	this.id = null;
@@ -76,6 +79,8 @@ Player.prototype.debug = function(){
 }
 exports.Player = Player;
 
+
+
 var Grid = function(cells, size){
 	this.size = size;
 	this.cells = cells;
@@ -90,7 +95,7 @@ Grid.prototype.stats = function() {
 			result.totalPlayable++;
 	}
 	return result;
-};
+}
 Grid.prototype.debug = function(){
 	for (var y = this.size.y - 1; y >= 0; --y){
 		var line = "";
@@ -102,6 +107,8 @@ Grid.prototype.debug = function(){
 	}
 }
 exports.Grid = Grid;
+
+
 
 var Level = function(){
 	this.difficulty = 0; //numaric aka 0(lvl1), 1(lvl2), 2(lcl3)
