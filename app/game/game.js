@@ -25,6 +25,7 @@ var Game = function(){
 			return;
 		} else {
 			var initState = this.clientEnterLevel(client, levelIndex);
+			ws.clientIndex = this.clients.length;
 			this.clients.push(client);
 			client.ws.send(JSON.stringify(initState));
 		}
@@ -177,13 +178,13 @@ var Game = function(){
 	}
 
 	this.getClientIndexWithWS = function(ws){
-		for (var i = 0; i < this.clients.length; ++i){
-			if (ws == this.clients[i].ws){ 
-				return i;
-			}
+		if (ws.hasOwnProperty('clientIndex'))
+			return ws.clientIndex;
+		else
+		{
+			console.error("Error: client index not found");
+			return -1;
 		}
-		console.error("Error: client index not found");
-		return -1;
 	}
 
 	this.sendStateUpdate = function(stateUpdate){
