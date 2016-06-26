@@ -16,43 +16,9 @@ var generateGrid = function(size){
 }
 
 var loadLevels = function(output, callback){
-	var levelData = [
-		{filename: 'webcontent/level0.png', difficulty: 0, maxPlayers: 4},
-		{filename: 'webcontent/level1.png', difficulty: 1, maxPlayers: 4},
-		{filename: 'webcontent/level2.png', difficulty: 2, maxPlayers: 4},
-		{filename: 'webcontent/Level3.png', difficulty: 3, maxPlayers: 4},
-		{filename: 'webcontent/Level4.png', difficulty: 4, maxPlayers: 4},
-		{filename: 'webcontent/Level5.png', difficulty: 5, maxPlayers: 4},
-		{filename: 'webcontent/Level6.png', difficulty: 6, maxPlayers: 4},
-		{filename: 'webcontent/Level7.png', difficulty: 7, maxPlayers: 4},
-		{filename: 'webcontent/Level8.png', difficulty: 8, maxPlayers: 4},
-		{filename: 'webcontent/Level9.png', difficulty: 9, maxPlayers: 4},
-		{filename: 'webcontent/Level10.png', difficulty: 10, maxPlayers: 4},
+	var levelData = [];
 
-		{filename: 'webcontent/level0.png', difficulty: 0, maxPlayers: 4},
-		{filename: 'webcontent/level1.png', difficulty: 1, maxPlayers: 4},
-		{filename: 'webcontent/level2.png', difficulty: 2, maxPlayers: 4},
-		{filename: 'webcontent/Level3.png', difficulty: 3, maxPlayers: 4},
-		{filename: 'webcontent/Level4.png', difficulty: 4, maxPlayers: 4},
-		{filename: 'webcontent/Level5.png', difficulty: 5, maxPlayers: 4},
-		{filename: 'webcontent/Level6.png', difficulty: 6, maxPlayers: 4},
-		{filename: 'webcontent/Level7.png', difficulty: 7, maxPlayers: 4},
-		{filename: 'webcontent/Level8.png', difficulty: 8, maxPlayers: 4},
-		{filename: 'webcontent/Level9.png', difficulty: 9, maxPlayers: 4},
-		{filename: 'webcontent/Level10.png', difficulty: 10, maxPlayers: 4},
-
-		{filename: 'webcontent/level0.png', difficulty: 0, maxPlayers: 4},
-		{filename: 'webcontent/level1.png', difficulty: 1, maxPlayers: 4},
-		{filename: 'webcontent/level2.png', difficulty: 2, maxPlayers: 4},
-		{filename: 'webcontent/Level3.png', difficulty: 3, maxPlayers: 4},
-		{filename: 'webcontent/Level4.png', difficulty: 4, maxPlayers: 4},
-		{filename: 'webcontent/Level5.png', difficulty: 5, maxPlayers: 4},
-		{filename: 'webcontent/Level6.png', difficulty: 6, maxPlayers: 4},
-		{filename: 'webcontent/Level7.png', difficulty: 7, maxPlayers: 4},
-		{filename: 'webcontent/Level8.png', difficulty: 8, maxPlayers: 4},
-		{filename: 'webcontent/Level9.png', difficulty: 9, maxPlayers: 4},
-		{filename: 'webcontent/Level10.png', difficulty: 10, maxPlayers: 4},
-
+	var levels = [
 		{filename: 'webcontent/level0.png', difficulty: 0, maxPlayers: 4},
 		{filename: 'webcontent/level1.png', difficulty: 1, maxPlayers: 4},
 		{filename: 'webcontent/level2.png', difficulty: 2, maxPlayers: 4},
@@ -66,6 +32,11 @@ var loadLevels = function(output, callback){
 		{filename: 'webcontent/Level10.png', difficulty: 10, maxPlayers: 4},
 	];
 
+	for (var i = 0; i < 20; i++) {
+		for (var j = 0; j < levels.length; j++) {
+			levelData.push(levels[j]);
+		}
+	}
 	var index = 0;
 
 	var levelDone;

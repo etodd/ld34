@@ -25,7 +25,7 @@ var Game = function(){
 			return;
 		} else {
 			var initState = this.clientEnterLevel(client, levelIndex);
-			ws.clientIndex = this.clients.length;
+			ws.client = client;
 			this.clients.push(client);
 			client.ws.send(JSON.stringify(initState));
 		}
@@ -85,9 +85,8 @@ var Game = function(){
 	}
 
 	this.handleClientClose = function(ws){
-		var clientIndex = this.getClientIndexWithWS(ws);
-		if (clientIndex != -1){
-			var client = this.clients[clientIndex];
+		if (ws.client){
+			var client = ws.client;
 			var stateUpdate = new webmodels.StateUpdate(client.player.currentLevelIndex, []);
 			this.deactivatePlayer(client.player, stateUpdate);
 			this.removeClientWithWS(ws);
@@ -118,9 +117,8 @@ var Game = function(){
 	};
 
 	this.handleClientEvent = function(ws, event){
-		var clientIndex = this.getClientIndexWithWS(ws);
-		if (clientIndex != -1){
-			var client = this.clients[clientIndex];
+		if (ws.client){
+			var client = ws.client;
 			if (event.type == webmodels.ClientEvent.TYPE_MOVE_EVENT){
 				var level = this.levels[client.player.currentLevelIndex];
 	
@@ -174,16 +172,13 @@ var Game = function(){
 	}
 
 	this.removeClientWithWS = function(ws){
-		this.clients.splice(this.getClientIndexWithWS(ws),1);
-	}
-
-	this.getClientIndexWithWS = function(ws){
-		if (ws.hasOwnProperty('clientIndex'))
-			return ws.clientIndex;
-		else
-		{
-			console.error("Error: client index not found");
-			return -1;
+		if (ws.client) {
+			for (var i = 0; i < this.clients.length; i++) {
+				if (this.clients[i] === ws.client) {
+					this.clients.splice(i, 1);
+					break;
+				}
+			}
 		}
 	}
 
