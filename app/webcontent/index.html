@@ -11,9 +11,9 @@
 		<script>
 			var protocol = (window.location.protocol === 'http:' ? 'ws://' : 'wss://');
 			if (/^localhost/.test(window.location.host))
-				constants.ws_url = protocol + window.location.host + '/event';
+				constants.ws_url = protocol + window.location.host + '/event'; // dev
 			else
-				constants.ws_url = 'ws://45.55.150.240:3000/event'; // prod
+				constants.ws_url = protocol + 'tilerisers.etodd.io/event'; // prod
 		</script>
 		<script src="helvetiker_bold.typeface.js"></script>
 		<link href="style.css" rel="stylesheet" type="text/css" />
