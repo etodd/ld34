@@ -9,7 +9,7 @@ var Game = function(){
 	this.levels = [];
 
 	var that = this;
-	process.loadLevels(this.levels, function() {
+	process.loadLevels(this, function() {
 		that.randomSpawn(20);
 	});
 

@@ -14,7 +14,7 @@ var generateGrid = function(size){
 	return grid;
 }
 
-var loadLevels = function(output, callback){
+var loadLevels = function(game, callback){
 	var levelData = [];
 
 	var levels = [
@@ -41,7 +41,7 @@ var loadLevels = function(output, callback){
 	var levelDone;
 	levelDone = function() {
 		if (index < levelData.length) {
-			loadLevelFromDisk(levelData[index], output, levelDone);
+			loadLevelFromDisk(levelData[index], game, levelDone);
 			index++;
 		}
 		else {
@@ -53,7 +53,7 @@ var loadLevels = function(output, callback){
 }
 exports.loadLevels = loadLevels;
 
-var loadLevelFromDisk = function(levelData, output, callback){
+var loadLevelFromDisk = function(levelData, game, callback){
 	imgLoader.loadImage(levelData.filename, function(img){
 		var grid = new Models.Grid(new Array(img.width * img.height), new Models.Vec2(img.width, img.height));
 
@@ -76,7 +76,7 @@ var loadLevelFromDisk = function(levelData, output, callback){
 				grid.cells[newIndex] = new Models.Cell(pixel.r, -pixel.g);
 			}
 		}
-		output.push(new Models.Level().new(grid, levelData.difficulty, levelData.maxPlayers));
+		game.levels.push(new Models.Level().new(grid, levelData.difficulty, levelData.maxPlayers));
 		callback();
 	});
 }
