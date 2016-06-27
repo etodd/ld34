@@ -17,6 +17,7 @@ var generateGrid = function(size){
 var loadLevels = function(game, callback){
 	var levelData = [];
 
+	var levelInstanceCount = 20;
 	var levels = [
 		{filename: 'webcontent/level0.png', difficulty: 0, maxPlayers: 4},
 		{filename: 'webcontent/level1.png', difficulty: 1, maxPlayers: 4},
@@ -31,25 +32,23 @@ var loadLevels = function(game, callback){
 		{filename: 'webcontent/Level10.png', difficulty: 10, maxPlayers: 4},
 	];
 
-	for (var i = 0; i < 20; i++) {
+	for (var i = 0; i < levelInstanceCount; i++) {
 		for (var j = 0; j < levels.length; j++) {
 			levelData.push(levels[j]);
 		}
 	}
 	var index = 0;
 
-	var levelDone;
-	levelDone = function() {
+	(function loadNext() {
 		if (index < levelData.length) {
-			loadLevelFromDisk(levelData[index], game, levelDone);
+			loadLevelFromDisk(levelData[index], game, loadNext);
 			index++;
-		}
-		else {
+
+		} else {
 			console.log('Loaded ' + levelData.length + ' levels.');
 			callback(); // all done
 		}
-	};
-	levelDone();
+	})();
 }
 exports.loadLevels = loadLevels;
 
