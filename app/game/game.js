@@ -245,10 +245,9 @@ var Game = function(){
 	setInterval(this.randomSpawn.bind(this), 2000);
 
 	this.findCompatibleLevel_withDifficulty = function(difficulty){
-		var levelClientCount = [];
-		for (var i = 0; i < this.levels.length; ++i){ levelClientCount.push(0); }
+		var levelClientCount = new Array(this.levels.length).fill(0);
 		for (var i = 0; i < this.clients.length; ++i){
-			levelClientCount[this.clients[i].player.currentLevelIndex] += 1;
+			levelClientCount[this.clients[i].player.currentLevelIndex]++;
 		}
 
 		for (var i = 0; i < this.levels.length; ++i){
