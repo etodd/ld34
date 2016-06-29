@@ -18,6 +18,10 @@ Vec2.prototype.debug = function(){
 Vec2.prototype.add = function(vec){
 	return new Vec2(this.x+vec.x, this.y+vec.y);
 }
+Vec2.prototype.addToSelf = function(vec){
+	this.x += vec.x;
+	this.y += vec.y;
+}
 Vec2.prototype.get = function(dir, size){
 	switch (dir){
 		case 0:
@@ -163,7 +167,10 @@ const TYPE_STATE_UPDATE = "stateUpdate";
 var StateUpdate = function(level_id, events){
 	this.level_id = level_id;
 	this.type = TYPE_STATE_UPDATE;
-	this.events = events;
+	this.events = events || [];
+}
+StateUpdate.prototype.merge = function(stateUpdate){
+	this.events.push.apply(this.events, stateUpdate.events);
 }
 exports.StateUpdate = StateUpdate;
 exports.StateUpdate.TYPE_STATE_UPDATE = TYPE_STATE_UPDATE;

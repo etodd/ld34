@@ -121,8 +121,8 @@ var Game = function(){
 			if (event.type == Models.ClientEvent.TYPE_MOVE_EVENT){
 				var level = this.levels[client.player.currentLevelIndex];
 	
-				var stateUpdate = new Models.StateUpdate(client.player.currentLevelIndex, []);
-				process.move(level, client.player, event.dir, stateUpdate);
+				var stateUpdate = process.move(level, client.player, event.dir);
+
 				if (client.player.nextLevel !== null) {
 					var levelIndex = this.findCompatibleLevel_withDifficulty(client.player.nextLevel);
 					client.player.nextLevel = null;

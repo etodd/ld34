@@ -91,36 +91,27 @@ var set = function(level, cellPos, cell, stateUpdate){
 }
 exports.set = set;
 
-var move = function(level, player, dir, stateUpdate){
-	var count = 0;
-	var center = new Models.Vec2();
-	for (var i = 0; i < level.grid.cells.length; i++) {
-		if (level.grid.cells[i].playerId === player.id) {
-			var p = numaric.indexToVec(i, level.grid.size);
-			center.x += p.x;
-			center.y += p.y;
-			count++;
-		}
+var move = function(level, player, dir){
+	var stateUpdate = new Models.StateUpdate(player.currentLevelIndex);
+	var playerCenter = getPlayerCenter(level, player);
+	if (!playerCenter){ // nothing to move
+		return stateUpdate;
 	}
 
-	if (count === 0)
-		return; // nothing to move
-	center.x /= count;
-	center.y /= count;
 	var movementDir = getDirectionEnum(dir);
-	center.x += movementDir.x;
-	center.y += movementDir.y;
+	playerCenter.addToSelf(movementDir);
 
 	var u_dir = getReverse(dir);
 	var v_dir = getPerpendicular(u_dir);
 	for (var u = 0; u < Math.abs(level.grid.size.get(getPositiveDir(u_dir), level.grid.size)); ++u){
 		for (var v = 0; v < Math.abs(level.grid.size.get(getPositiveDir(v_dir), level.grid.size)); ++v){
-			var p = new Models.Vec2();
-			p.set(u_dir, level.grid.size, u);
-			p.set(v_dir, level.grid.size, v);
-			updateCell(p, player, level.grid, dir, center, stateUpdate);
+			var position = new Models.Vec2();
+			position.set(u_dir, level.grid.size, u);
+			position.set(v_dir, level.grid.size, v);
+			stateUpdate.merge( updateCell(position, player, level.grid, dir, playerCenter) );
 		}
 	}
+	return stateUpdate;
 }
 exports.move = move;
 
@@ -131,8 +122,10 @@ var isWithinRange = function(center, pos) {
 	return (dx * dx) + (dy * dy) < range;
 };
 
-var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
+var updateCell = function(cellPos, player, grid, dir, center){
+	var stateUpdate = new Models.StateUpdate(player.currentLevelIndex);
 	var cellId = numaric.vecToIndex(cellPos, grid.size);
+
 	if (grid.cells[cellId].playerId === player.id){
 		var nextCellPos = cellPos.add(getDirectionEnum(dir));
 		if (nextCellPos.x < 0 || nextCellPos.x >= grid.size.x || nextCellPos.y < 0 || nextCellPos.y >= grid.size.y) {
@@ -162,7 +155,7 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 				stateUpdate.events.push(new Models.Event(cellId, dir, newPlayerId, newValue));
 
 				if (withinRange)
-					assimilateAdjacents(nextCellPos, grid, player, center, stateUpdate);
+					stateUpdate.merge( assimilateAdjacents(nextCellPos, grid, player, center) );
 			}
 			else {
 				// something is in the way
@@ -184,7 +177,7 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 						stateUpdate.events.push(new Models.Event(cellId, dir, newPlayerId, newValue));
 
 						if (withinRange)
-							assimilateAdjacents(nextCellPos, grid, player, center, stateUpdate);
+							stateUpdate.merge( assimilateAdjacents(nextCellPos, grid, player, center) );
 					}
 				}
 				else {
@@ -198,9 +191,12 @@ var updateCell = function(cellPos, player, grid, dir, center, stateUpdate){
 			}
 		}
 	}
+	return stateUpdate;
 }
 
-var assimilateAdjacents = function(cellPos, grid, player, center, stateUpdate) {
+var assimilateAdjacents = function(cellPos, grid, player, center) {
+	var stateUpdate = new Models.StateUpdate(player.currentLevelIndex);
+
 	for (var i = 0; i < directions.length; i++) {
 		var adjacent = cellPos.add(directions[i]);
 		if (adjacent.x >= 0 && adjacent.x < grid.size.x && adjacent.y >= 0 && adjacent.y < grid.size.y
@@ -216,7 +212,8 @@ var assimilateAdjacents = function(cellPos, grid, player, center, stateUpdate) {
 			}
 		}
 	}
-};
+	return stateUpdate;
+}
 exports.assimilateAdjacents = assimilateAdjacents;
 
 var directions = [];
@@ -263,4 +260,24 @@ var getPositiveDir = function(dir){
 		case 3:
 			return 3;
 	}
+}
+
+var getPlayerCenter = function(level, player){
+	var count = 0;
+	var center = new Models.Vec2();
+	
+	for (var i = 0; i < level.grid.cells.length; i++) {
+		if (level.grid.cells[i].playerId === player.id) {
+			var position = numaric.indexToVec(i, level.grid.size);
+			center.x += position.x;
+			center.y += position.y;
+			count++;
+		}
+	}
+
+	if (count === 0)
+		return null; // nothing to move
+	center.x /= count;
+	center.y /= count;
+	return center;
 }
