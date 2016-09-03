@@ -9,11 +9,7 @@
 		<script src="FontUtils.js"></script>
 		<script src="game.js"></script>
 		<script>
-			var protocol = (window.location.protocol === 'http:' ? 'ws://' : 'wss://');
-			if (/^localhost/.test(window.location.host))
-				constants.ws_url = protocol + window.location.host + '/event'; // dev
-			else
-				constants.ws_url = protocol + 'tilerisers.etodd.io/event'; // prod
+			constants.ws_url = 'wss://tilerisers.etodd.io/event'; // prod
 		</script>
 		<script src="helvetiker_bold.typeface.js"></script>
 		<link href="style.css" rel="stylesheet" type="text/css" />
