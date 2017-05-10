@@ -1,4 +1,4 @@
-var Models = require("../model/Models.js");
+var Models = require("../model/models.js");
 var numaric = require("../utils/numaric.js");
 var deepcopy = require('deepcopy');
 var imgLoader = require("../utils/imageLoader.js");

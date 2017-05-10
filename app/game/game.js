@@ -1,4 +1,4 @@
-var Models = require("../model/Models.js");
+var Models = require("../model/models.js");
 var process = require("./process.js");
 var numaric = require("../utils/numaric.js");
 var ws = require('ws');
