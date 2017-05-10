@@ -13,20 +13,22 @@ var Game = function(){
 		that.randomSpawn(20);
 	});
 
-	this.handleClientConnect = function(ws) {
-		var newPlayer = new Models.Player().new(this.clientIdCounter);
-		this.clientIdCounter++;
-		var client = new Models.Client(ws, newPlayer);
+	this.handleClientConnect = function(w) {
+		if (w.readyState === ws.OPEN) {
+			var newPlayer = new Models.Player().new(this.clientIdCounter);
+			this.clientIdCounter++;
+			var client = new Models.Client(w, newPlayer);
 
-		var levelIndex = this.findCompatibleLevel_withDifficulty(0);
-		if (levelIndex == -1){
-			client.ws.close();
-			return;
-		} else {
-			var initState = this.clientEnterLevel(client, levelIndex);
-			ws.client = client;
-			this.clients.push(client);
-			client.ws.send(JSON.stringify(initState));
+			var levelIndex = this.findCompatibleLevel_withDifficulty(0);
+			if (levelIndex == -1){
+				client.ws.close();
+				return;
+			} else {
+				var initState = this.clientEnterLevel(client, levelIndex);
+				ws.client = client;
+				this.clients.push(client);
+				client.ws.send(JSON.stringify(initState));
+			}
 		}
 	}
 
@@ -129,7 +131,8 @@ var Game = function(){
 					if (levelIndex !== -1) {
 						this.deactivatePlayer(client.player, stateUpdate);
 						var initState = this.clientEnterLevel(client, levelIndex);
-						client.ws.send(JSON.stringify(initState));
+						if (client.ws.readyState === ws.OPEN)
+							client.ws.send(JSON.stringify(initState));
 					}
 				}
 				this.sendStateUpdate(stateUpdate);
