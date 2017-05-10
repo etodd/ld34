@@ -14,6 +14,7 @@ var Game = function(){
 	});
 
 	this.handleClientConnect = function(w) {
+		w.client = null;
 		if (w.readyState === ws.OPEN) {
 			var newPlayer = new Models.Player().new(this.clientIdCounter);
 			this.clientIdCounter++;
@@ -25,7 +26,7 @@ var Game = function(){
 				return;
 			} else {
 				var initState = this.clientEnterLevel(client, levelIndex);
-				ws.client = client;
+				client.ws.client = client;
 				this.clients.push(client);
 				client.ws.send(JSON.stringify(initState));
 			}
